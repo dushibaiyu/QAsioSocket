@@ -23,6 +23,11 @@ public:
         WriteEorro,
         ReadError
     };
+    enum AdressType{
+        IPV4,
+        IPV6,
+        DOMAIN
+    };
 
 signals:
     void readReadly();
@@ -32,8 +37,8 @@ signals:
     void stateChange(SocketState state);
     void hostFound();
 public slots:
-    void connectToHost(const QString &hostName, quint16 port);
-    void connectToHost(asio::ip::tcp::endpoint & peerPoint);
+    void connectToHost(const QString &hostName, quint16 port,AdressType type);
+    void connectToHost(const asio::ip::tcp::endpoint &peerPoint);
 
     void disconnectFromHost();
 
