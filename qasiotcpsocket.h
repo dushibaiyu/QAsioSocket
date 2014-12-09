@@ -7,8 +7,6 @@
 #include <QMutex>
 #include <QQueue>
 
-class QHostAddress;
-
 class QAsioTcpSocket : public QObject//,public asio::ip::tcp::socket
 {
     Q_OBJECT
@@ -35,7 +33,6 @@ signals:
     void hostFound();
 public slots:
     void connectToHost(const QString &hostName, quint16 port);
-    void connectToHost(const QHostAddress & hostAddress, quint16 port);
     void connectToHost(asio::ip::tcp::endpoint & peerPoint);
 
     void disconnectFromHost();

@@ -1,6 +1,7 @@
 ﻿#include "qasioevent.h"
 #include <functional>
 #include <QCoreApplication>
+#include <QHosta
 
 QAsioTcpSocket::QAsioTcpSocket(QObject *parent) :
     QObject(parent),state_(UnconnectedState)
@@ -131,7 +132,9 @@ void QAsioTcpSocket::customEvent(QEvent *event)
     }
 }
 
-void QAsioTcpSocket::connectToHost(asio::ip::tcp::endpoint &peerPoint)
+void QAsioTcpSocket::connectToHost(asio::ip::tcp::endpoint & peerPoint)
 {
 //    asio::async_connect(*socket_,)
+    asio::ip::tcp::resolver::query qu();
+    asio::ip::tcp::endpoint end;
 }
