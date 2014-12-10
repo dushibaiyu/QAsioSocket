@@ -33,6 +33,6 @@ private:
     asio::error_code erro_code;
 };
 
-const QEvent::Type QAsioSocketEventType = (QEvent::Type)QEvent::registerEventType();
+const QEvent::Type QAsioEvent::QAsioSocketEventType = (QEvent::Type)QEvent::registerEventType();
 
 #endif // QASIOEVENT_H

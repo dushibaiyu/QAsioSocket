@@ -1,4 +1,4 @@
-//
+﻿//
 // detail/buffer_sequence_adapter.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
@@ -224,7 +224,7 @@ public:
   explicit buffer_sequence_adapter(
       const asio::const_buffers_1& buffer_sequence)
   {
-    init_native_buffer(buffer_, Buffer(buffer_sequence));
+    init_native_buffer(buffer_, /*Buffer(*/buffer_sequence/*)*/);
     total_buffer_size_ = asio::buffer_size(buffer_sequence);
   }
 

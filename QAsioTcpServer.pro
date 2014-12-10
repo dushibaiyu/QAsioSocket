@@ -27,3 +27,5 @@ HEADERS += \
     qasioevent.h
 
 INCLUDEPATH += $$PWD/include
+
+win32:LIBS += -lws2_32

@@ -2,6 +2,8 @@
 #include <functional>
 #include <QCoreApplication>
 
+QSharedPointer<IOServerThread> QAsioTcpSocket::ioserver = QSharedPointer<IOServerThread>();
+
 QAsioTcpSocket::QAsioTcpSocket(QObject *parent) :
     QObject(parent),state_(UnconnectedState)
 {
@@ -165,6 +167,8 @@ void QAsioTcpSocket::connectedHandler(const asio::error_code &error,asio::ip::tc
 {
     if (!error) {
         state_ = ConnectedState;
+        socket_->async_read_some(asio::buffer(data_),
+                                 std::bind(&QAsioTcpSocket::readHandler,this,std::placeholders::_1,std::placeholders::_2));
         QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::Connected,error));
     } else {
         asio::ip::tcp::resolver::iterator end;
@@ -174,4 +178,11 @@ void QAsioTcpSocket::connectedHandler(const asio::error_code &error,asio::ip::tc
             QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::ConnectEorro,error));
         }
     }
+}
+
+void QAsioTcpSocket::disconnectFromHost()
+{
+    if (state_ == UnconnectedState) return;
+    socket_->shutdown(asio::ip::tcp::socket::shutdown_both);
+    socket_->close();
 }

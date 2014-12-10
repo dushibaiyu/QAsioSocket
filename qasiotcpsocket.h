@@ -31,15 +31,14 @@ public:
 //        IPV6,
 //        DOMAIN
 //    };
-
-signals:
+Q_SIGNALS:
     void readReadly();
     void connected();
     void disconnected();
     void error(SocketErroSite site,const asio::error_code & erro_code);
     void stateChange(SocketState state);
     void hostFound();
-public slots:
+public Q_SLOTS:
     void connectToHost(const QString &hostName, quint16 port);
     void connectToHost(const asio::ip::tcp::endpoint &peerPoint);
 
@@ -78,6 +77,7 @@ protected:
 
 protected:
     void customEvent(QEvent * event);
+
     static QSharedPointer<IOServerThread> ioserver;
 private:
     QMutex writeMutex;
