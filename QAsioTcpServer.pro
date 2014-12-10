@@ -19,13 +19,16 @@ DEFINES += ASIO_STANDALONE
 
 SOURCES += main.cpp \
     qasiotcpsocket.cpp \
-    ioserverthread.cpp
+    ioserverthread.cpp \
+    qasiotcpserver.cpp
 
 HEADERS += \
     qasiotcpsocket.h \
     ioserverthread.h \
-    qasioevent.h
+    qasioevent.h \
+    qasiotcpserver.h
 
 INCLUDEPATH += $$PWD/include
 
 win32:LIBS += -lws2_32
+win32:DEFINES += _WIN32_WINNT=0X0601

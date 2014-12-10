@@ -56,7 +56,7 @@ void QAsioTcpSocket::writeHandler(const asio::error_code &error, std::size_t byt
 {
     if (!error){
         writeMutex.lock();
-        if (writeQueue.head().size() == bytes_transferred){
+        if (static_cast<std::size_t>(writeQueue.head().size()) == bytes_transferred){
             writeQueue.dequeue();
             writeMutex.unlock();
             if (!writeQueue.isEmpty())

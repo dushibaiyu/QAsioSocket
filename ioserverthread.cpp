@@ -20,6 +20,6 @@ void IOServerThread::run()
     if (server == nullptr)
         server = new asio::io_service;
     asio::io_service::work  wk(*server);
-    wk;//无意义，只是为了取消声明变量而不使用得警告。
+    wk.get_io_service();//无意义，只是为了取消声明变量而不使用得警告。
     server->run();
 }
