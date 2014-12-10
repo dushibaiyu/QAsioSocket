@@ -10,7 +10,7 @@ QAsioTcpSocket::QAsioTcpSocket(QObject *parent) :
         ioserver = QSharedPointer<IOServerThread>(new IOServerThread);
         ioserver->start();
     }
-    socket_ = new asio::ip::tcp::socket(*ioserver);
+    socket_ = new asio::ip::tcp::socket(*(ioserver->getIOServer()));
 }
 
 QAsioTcpSocket::QAsioTcpSocket(asio::ip::tcp::socket * socket, QObject *parent) :
@@ -29,7 +29,7 @@ void QAsioTcpSocket::readHandler(const asio::error_code &error, std::size_t byte
             QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::DisConnect,error));
         }
         bufferMutex.lock();
-        if (buffer->atEnd())
+        if (buffer.atEnd())
             buffer.close();
         if (!buffer.isOpen())
             buffer.open(QBuffer::ReadWrite|QBuffer::Truncate);
@@ -69,17 +69,6 @@ void QAsioTcpSocket::writeHandler(const asio::error_code &error, std::size_t byt
     QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::WriteEorro,error));
 }
 
-void QAsioTcpSocket::connectedHandler(const asio::error_code &error)
-{
-    if (!error) {
-        state_ = ConnectedState;
-        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::Connected,error));
-    } else {
-        state_ = UnconnectedState;
-        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::ConnectEorro,error));
-    }
-}
-
 bool QAsioTcpSocket::write(const QByteArray &data)
 {
     if (state_ != ConnectedState)
@@ -87,12 +76,10 @@ bool QAsioTcpSocket::write(const QByteArray &data)
     writeMutex.lock();
     if (!data.isEmpty())
         writeQueue.append(data);
-//    socket_->async_write_some(asio::buffer(writeQueue.head().data(),writeQueue.head().size()),
-//                              std::bind(&QAsioTcpSocket::writeHandler,this,std::placeholders::_1,std::placeholders::_2));
-    socket_->async_send(asio::buffer(writeQueue.head().data(),writeQueue.head().size()),
-                        std::bind(&QAsioTcpSocket::writeHandler,this,std::placeholders::_1,std::placeholders::_2));
-//    asio::async_write(*socket_,asio::buffer(writeQueue.head().data(),writeQueue.head().size()),
-//                      std::bind(&QAsioTcpSocket::writeHandler,this,std::placeholders::_1,std::placeholders::_2));
+//    socket_->async_send(asio::buffer(writeQueue.head().data(),writeQueue.head().size()),
+//                        std::bind(&QAsioTcpSocket::writeHandler,this,std::placeholders::_1,std::placeholders::_2));
+    asio::async_write(*socket_,asio::buffer(writeQueue.head().data(),writeQueue.head().size()),
+                      std::bind(&QAsioTcpSocket::writeHandler,this,std::placeholders::_1,std::placeholders::_2));
     writeMutex.unlock();
     return true;
 }
@@ -128,6 +115,13 @@ void QAsioTcpSocket::customEvent(QEvent *event)
             emit stateChange(UnconnectedState);
             emit disconnected();
             break;
+        case QAsioEvent::FindHosted :
+            emit hostFound();
+            break;
+        case QAsioEvent::FindHostEorro :
+            emit error(FindHostError,e->getErrorCode());
+            emit stateChange(UnconnectedState);
+            break;
         default:
             break;
         }
@@ -135,21 +129,49 @@ void QAsioTcpSocket::customEvent(QEvent *event)
     }
 }
 
-void QAsioTcpSocket::connectToHost(const asio::ip::tcp::endpoint & peerPoint)
+void QAsioTcpSocket::resolverHandle(const asio::error_code &error,asio::ip::tcp::resolver::iterator iterator)
 {
-    socket_->async_connect(peerPoint,std::bind(&QAsioTcpSocket::connectedHandler,this,std::placeholders::_1));
+    if (!error) {
+        asio::async_connect(*socket_,iterator,
+                      std::bind(&QAsioTcpSocket::connectedHandler,this,std::placeholders::_1,std::placeholders::_2));
+        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::FindHosted,error));
+    } else {
+        state_ = UnconnectedState;
+        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::FindHostEorro,error));
+    }
 }
 
-void QAsioTcpSocket::connectToHost(const QString & hostName, quint16 port,, QAsioTcpSocket::AdressType type)
+void QAsioTcpSocket::connectToHost(const asio::ip::tcp::endpoint & peerPoint)
 {
-    switch (type) {
-    case IPV4:
+    if (resolver_ == nullptr)
+        resolver_ = new asio::ip::tcp::resolver(socket_->get_io_service());
+    resolver_->async_resolve(peerPoint,
+                           std::bind(&QAsioTcpSocket::resolverHandle,this,std::placeholders::_1,std::placeholders::_2));
+    state_ = ConnectingState;
+    emit stateChange(ConnectingState);
+}
 
-        break;
-    case IPV6:
+void QAsioTcpSocket::connectToHost(const QString & hostName, quint16 port)
+{
+    if (resolver_ == nullptr)
+        resolver_ = new asio::ip::tcp::resolver(socket_->get_io_service());
+    resolver_->async_resolve(asio::ip::tcp::resolver::query(hostName.toStdString(),QString::number(port).toStdString()),
+                           std::bind(&QAsioTcpSocket::resolverHandle,this,std::placeholders::_1,std::placeholders::_2));
+    state_ = ConnectingState;
+    emit stateChange(ConnectingState);
+}
 
-        break;
-    default:
-        break;
+void QAsioTcpSocket::connectedHandler(const asio::error_code &error,asio::ip::tcp::resolver::iterator iterator)
+{
+    if (!error) {
+        state_ = ConnectedState;
+        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::Connected,error));
+    } else {
+        asio::ip::tcp::resolver::iterator end;
+        if(iterator == end)
+        {
+            state_ = UnconnectedState;
+            QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::ConnectEorro,error));
+        }
     }
 }

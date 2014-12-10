@@ -1,8 +1,10 @@
 ﻿#ifndef IOSERVERTHREAD_H
 #define IOSERVERTHREAD_H
 
+#include "include/asio.hpp"
 #include <QThread>
-#include "asio.hpp"
+//#include "asio/io_service.hpp"
+
 
 class IOServerThread : public QThread
 {

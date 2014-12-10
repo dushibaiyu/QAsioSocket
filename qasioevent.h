@@ -13,13 +13,15 @@ public:
         ConnectEorro,
         WriteEorro,
         ReadError,
-        ReadReadly
+        ReadReadly,
+        FindHosted,
+        FindHostEorro
     };
 
     explicit QAsioEvent():QEvent(QAsioSocketEventType){}
     QAsioEvent(ConnectedEvent ctype,asio::error_code code)
         :QEvent(QAsioSocketEventType),cType_(ctype),erro_code(code){}
-    static const QEvent::Type QAsioSocketEventType = (QEvent::Type)QEvent::registerEventType();
+    static const QEvent::Type QAsioSocketEventType;// = (QEvent::Type)QEvent::registerEventType();
 
     void setSocketState(ConnectedEvent ctype){cType_ = ctype;}
     void setErrorCode(const asio::error_code & code) {erro_code = code;}
@@ -30,5 +32,7 @@ private:
     ConnectedEvent cType_;
     asio::error_code erro_code;
 };
+
+const QEvent::Type QAsioSocketEventType = (QEvent::Type)QEvent::registerEventType();
 
 #endif // QASIOEVENT_H

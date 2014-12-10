@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core core_private
+QT       += core
 
 QT       -= gui
 
@@ -15,6 +15,7 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 CONFIG += C++11
+DEFINES += ASIO_STANDALONE
 
 SOURCES += main.cpp \
     qasiotcpsocket.cpp \

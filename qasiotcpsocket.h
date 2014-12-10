@@ -5,7 +5,9 @@
 #include "ioserverthread.h"
 #include <QSharedPointer>
 #include <QMutex>
+#include <QMutexLocker>
 #include <QQueue>
+//#include "asio/ip/tcp.hpp"
 
 class QAsioTcpSocket : public QObject//,public asio::ip::tcp::socket
 {
@@ -21,23 +23,24 @@ public:
     enum SocketErroSite{
         ConnectEorro,
         WriteEorro,
-        ReadError
+        ReadError,
+        FindHostError
     };
-    enum AdressType{
-        IPV4,
-        IPV6,
-        DOMAIN
-    };
+//    enum AdressType{
+//        IPV4,
+//        IPV6,
+//        DOMAIN
+//    };
 
 signals:
     void readReadly();
     void connected();
     void disconnected();
-    void error(SocketErroSite site,asio::error_code & erro_code);
+    void error(SocketErroSite site,const asio::error_code & erro_code);
     void stateChange(SocketState state);
     void hostFound();
 public slots:
-    void connectToHost(const QString &hostName, quint16 port,AdressType type);
+    void connectToHost(const QString &hostName, quint16 port);
     void connectToHost(const asio::ip::tcp::endpoint &peerPoint);
 
     void disconnectFromHost();
@@ -45,20 +48,17 @@ public slots:
     qint64 bytesAvailable() const {return buffer.size() - buffer.pos();}
     QByteArray read(qint64 maxsize = 0)
     {
-        QMutexLocker mutexLocker(bufferMutex);
-        mutexLocker;
+        QMutexLocker mutexLocker(&bufferMutex);
         return buffer.read(maxsize);
     }
     QByteArray readAll()
     {
-        QMutexLocker mutexLocker(bufferMutex);
-        mutexLocker;
+        QMutexLocker mutexLocker(&bufferMutex);
         return buffer.readAll();
     }
     QByteArray readLine()
     {
-        QMutexLocker mutexLocker(bufferMutex);
-        mutexLocker;
+        QMutexLocker mutexLocker(&bufferMutex);
         return buffer.readLine();
     }
     bool atEnd() const{return buffer.atEnd();}
@@ -71,7 +71,8 @@ public slots:
 protected:
     void readHandler(const asio::error_code& error, std::size_t bytes_transferred);
     void writeHandler(const asio::error_code& error,std::size_t bytes_transferred);
-    void connectedHandler(const asio::error_code& error);
+    void connectedHandler(const asio::error_code& error, asio::ip::tcp::resolver::iterator iterator);
+    void resolverHandle(const asio::error_code & error, asio::ip::tcp::resolver::iterator iterator);
 
     QAsioTcpSocket(asio::ip::tcp::socket * socket , QObject *parent = 0);//server类才能访问
 
@@ -87,9 +88,10 @@ private:
     QMutex bufferMutex;
 private:
     SocketState state_;
-    asio::ip::tcp::socket * socket_;
+    asio::ip::tcp::socket * socket_ = nullptr;
     asio::error_code erro_code;
     asio::ip::tcp::endpoint peerPoint;
+    asio::ip::tcp::resolver * resolver_ = nullptr;
     Q_DISABLE_COPY(QAsioTcpSocket)
 };
 
