@@ -30,5 +30,5 @@ HEADERS += \
 
 INCLUDEPATH += $$PWD/include
 
-win32:LIBS += -lws2_32
+win32:LIBS += -lws2_32 -lMswsock
 win32:DEFINES += _WIN32_WINNT=0X0601

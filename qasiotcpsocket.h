@@ -9,6 +9,8 @@
 #include <QQueue>
 //#include "asio/ip/tcp.hpp"
 
+class QAsioTcpServer;
+
 class QAsioTcpSocket : public QObject//,public asio::ip::tcp::socket
 {
     Q_OBJECT
@@ -74,6 +76,7 @@ protected:
     void resolverHandle(const asio::error_code & error, asio::ip::tcp::resolver::iterator iterator);
 
     QAsioTcpSocket(asio::ip::tcp::socket * socket , QObject *parent = 0);//server类才能访问
+    friend class QAsioTcpServer;
 
 protected:
     void customEvent(QEvent * event);
@@ -92,6 +95,7 @@ private:
     asio::error_code erro_code;
     asio::ip::tcp::endpoint peerPoint;
     asio::ip::tcp::resolver * resolver_ = nullptr;
+
     Q_DISABLE_COPY(QAsioTcpSocket)
 };
 

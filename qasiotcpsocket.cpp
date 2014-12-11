@@ -128,6 +128,8 @@ void QAsioTcpSocket::customEvent(QEvent *event)
             break;
         }
         e->accept();
+    } else {
+        QObject::customEvent(event);
     }
 }
 

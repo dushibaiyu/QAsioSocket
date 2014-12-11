@@ -6,6 +6,8 @@
 #include "ioserverthread.h"
 #include <QMutex>
 
+class QAsioTcpSocket;
+
 class QAsioTcpServer : public QObject
 {
     Q_OBJECT
@@ -17,17 +19,19 @@ public:
     };
     asio::error_code getEorror() const {return error_;}
 Q_SIGNALS:
-
+    void newConnection(QAsioTcpSocket * socket);
 public Q_SLOTS:
     bool listen(const QString & ip,qint16 port);
     bool listen(qint16 port,ListenType type = Both);
     void close();
     qint16 listenPort()const {return port_;}
     ListenType listenType() const {return type_;}
-    void getIOSize() const {return threadSize_;}
+    int getIOSize() const {return threadSize_;}
 protected:
     void appectHandleV4(const asio::error_code & code);
     void appectHandleV6(const asio::error_code & code);
+
+    void customEvent(QEvent * e);
 
     inline void goForward(){lastState ++; if (lastState == threadSize_) lastState = 0;}
     inline bool linstenV4(const asio::ip::tcp::endpoint & endpoint);
