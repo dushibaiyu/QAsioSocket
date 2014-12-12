@@ -2,17 +2,17 @@
 #include <functional>
 #include <QCoreApplication>
 
-QSharedPointer<IOServerThread> QAsioTcpSocket::ioserver = QSharedPointer<IOServerThread>();
+QPointer<IOServerThread> QAsioTcpSocket::ioserver = nullptr;
 
 QAsioTcpSocket::QAsioTcpSocket(QObject *parent) :
     QObject(parent),state_(UnconnectedState)
 {
     if(ioserver.isNull())
     {
-        ioserver = QSharedPointer<IOServerThread>(new IOServerThread);
+        ioserver = QPointer<IOServerThread>(new IOServerThread);
         ioserver->start();
     }
-    socket_ = new asio::ip::tcp::socket(*(ioserver->getIOServer()));
+    socket_ = new asio::ip::tcp::socket(ioserver->getIOServer());
 }
 
 QAsioTcpSocket::QAsioTcpSocket(asio::ip::tcp::socket * socket, QObject *parent) :

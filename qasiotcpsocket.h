@@ -3,7 +3,7 @@
 
 #include <QBuffer>
 #include "ioserverthread.h"
-#include <QSharedPointer>
+#include <QPointer>
 #include <QMutex>
 #include <QMutexLocker>
 #include <QQueue>
@@ -81,7 +81,7 @@ protected:
 protected:
     void customEvent(QEvent * event);
 
-    static QSharedPointer<IOServerThread> ioserver;
+    static QPointer<IOServerThread> ioserver;
 private:
     QMutex writeMutex;
     QQueue<QByteArray> writeQueue;

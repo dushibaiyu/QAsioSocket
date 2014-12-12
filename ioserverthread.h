@@ -17,11 +17,11 @@ public:
     ~IOServerThread();
 
 public:
-    asio::io_service * getIOServer(){return server;}
+    asio::io_service & getIOServer(){return server;}
 protected:
     void run();
 private:
-    asio::io_service * server = nullptr;
+    asio::io_service server;
 };
 
 #endif // IOSERVERTHREAD_H

@@ -1,4 +1,5 @@
 ﻿#include "ioserverthread.h"
+#include <QDebug>
 
 IOServerThread::IOServerThread(QObject *parent) :
     QThread(parent)
@@ -7,19 +8,15 @@ IOServerThread::IOServerThread(QObject *parent) :
 
 IOServerThread::~IOServerThread()
 {
-    if (server != nullptr)
-    {
-        if (!server->stopped())
-            server->stop();
-        delete server;
-    }
+
+    if (!server.stopped())
+        server.stop();
 }
 
 void IOServerThread::run()
 {
-    if (server == nullptr)
-        server = new asio::io_service;
-    asio::io_service::work  wk(*server);
+    asio::io_service::work  wk(server);
     wk.get_io_service();//无意义，只是为了取消声明变量而不使用得警告。
-    server->run();
+    server.run();
+    qDebug() << "IOServerThread::run";
 }
