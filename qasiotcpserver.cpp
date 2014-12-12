@@ -100,57 +100,46 @@ bool QAsioTcpServer::linstenV6(const asio::ip::tcp::endpoint &endpoint)
 
 bool QAsioTcpServer::listen(qint16 port, ListenType type)
 {
+    bool tmpbool = false;
     switch (type) {
-    case IPV4 : {
+    case IPV4 :
         asio::ip::tcp::endpoint endpot(asio::ip::tcp::v4(),port);
-        if (linstenV4(endpot))
-            return true;
-        else
-            return false;
-    }
-    case IPV6 : {
+        tmpbool = linstenV4(endpot);
+        break;
+    case IPV6 :
         asio::ip::tcp::endpoint endpot(asio::ip::tcp::v6(),port);
-        if (linstenV6(endpot))
-            return true;
-        else
-            return false;
+        tmpbool = linstenV6(endpot);
+        break;
+    case Both :
+        asio::ip::tcp::endpoint endpot4(asio::ip::tcp::v6(),port);
+        asio::ip::tcp::endpoint endpot6(asio::ip::tcp::v4(),port);
+        if (linstenV4(endpot4) && linstenV6(endpot6))
+            tmpbool = true;
+        else {
+            this->close();
+            tmpbool =  false;
+        }
+        break;
     }
-    case Both : {
-         asio::ip::tcp::endpoint endpot4(asio::ip::tcp::v6(),port);
-         asio::ip::tcp::endpoint endpot6(asio::ip::tcp::v4(),port);
-         if (linstenV4(endpot4) && linstenV6(endpot6))
-            return true;
-         else {
-             this->close();
-             return false;
-         }
-    }
-    default:
-        return false;
-    }
+    return tmpbool;
 }
 
 bool QAsioTcpServer::listen(const QString &ip, qint16 port)
 {
+    bool tmpbool = false;
     asio::error_code code;
     asio::ip::address address = asio::ip::address::from_string(ip.toStdString(),code);
     if (code) {
         this->error_ = code;
-        return false;
+        tmpbool =  false;
     }
     asio::ip::tcp::endpoint endpot(address,port);
     if (address.is_v4()) {
-        if (linstenV4(endpot))
-            return true;
-        else
-            return false;
+        tmpbool = linstenV4(endpot);
     } else if (address.is_v6()) {
-        if (linstenV6(endpot))
-            return true;
-        else
-            return false;
+        tmpbool =  linstenV6(endpot);
     }
-    return false;
+    return tmpbool;
 }
 
 void QAsioTcpServer::appectHandleV4(const asio::error_code &code)
@@ -159,7 +148,8 @@ void QAsioTcpServer::appectHandleV4(const asio::error_code &code)
         goForward();
         QAsioTcpSocket * socket = new QAsioTcpSocket(socketV4);
         socketV4 = new asio::ip::tcp::socket(iosserverList.at(lastState)->getIOServer());
-        apv6->async_accept(*socketV4,std::bind(&QAsioTcpServer::appectHandleV4,this,std::placeholders::_1));
+        apv4->async_accept(*socketV4,std::bind(&QAsioTcpServer::appectHandleV4,this,std::placeholders::_1));
+        socket->moveToThread(this->thread());
         QCoreApplication::postEvent(this,new QAsioNewEvent(socket),Qt::HighEventPriority);
     } else {
         error_ = code;
@@ -173,6 +163,7 @@ void QAsioTcpServer::appectHandleV6(const asio::error_code &code)
         QAsioTcpSocket * socket = new QAsioTcpSocket(socketV6);
         socketV6 = new asio::ip::tcp::socket(iosserverList.at(lastState)->getIOServer());
         apv6->async_accept(*socketV6,std::bind(&QAsioTcpServer::appectHandleV6,this,std::placeholders::_1));
+        socket->moveToThread(this->thread());
         QCoreApplication::postEvent(this,new QAsioNewEvent(socket),Qt::HighEventPriority);
     } else {
         error_ = code;
