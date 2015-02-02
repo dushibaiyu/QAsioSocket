@@ -22,7 +22,7 @@ Q_SIGNALS:
     void newConnection(QAsioTcpSocket * socket);
 public Q_SLOTS:
     bool listen(const QString & ip,qint16 port);
-    bool listen(qint16 port,ListenType type = Both);
+    bool listen(qint16 port,ListenType ltype = Both);
     void close();
     qint16 listenPort()const {return port_;}
     ListenType listenType() const {return type_;}

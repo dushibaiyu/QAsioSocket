@@ -98,19 +98,24 @@ bool QAsioTcpServer::linstenV6(const asio::ip::tcp::endpoint &endpoint)
     return true;
 }
 
-bool QAsioTcpServer::listen(qint16 port, ListenType type)
+bool QAsioTcpServer::listen(qint16 port, ListenType ltype)
 {
     bool tmpbool = false;
-    switch (type) {
+    switch (ltype) {
     case IPV4 :
+    {
         asio::ip::tcp::endpoint endpot(asio::ip::tcp::v4(),port);
         tmpbool = linstenV4(endpot);
+    }
         break;
     case IPV6 :
+    {
         asio::ip::tcp::endpoint endpot(asio::ip::tcp::v6(),port);
         tmpbool = linstenV6(endpot);
+    }
         break;
     case Both :
+    {
         asio::ip::tcp::endpoint endpot4(asio::ip::tcp::v6(),port);
         asio::ip::tcp::endpoint endpot6(asio::ip::tcp::v4(),port);
         if (linstenV4(endpot4) && linstenV6(endpot6))
@@ -119,8 +124,12 @@ bool QAsioTcpServer::listen(qint16 port, ListenType type)
             this->close();
             tmpbool =  false;
         }
+    }
+        break;
+    default:
         break;
     }
+
     return tmpbool;
 }
 
