@@ -12,7 +12,11 @@ TARGET = QAsioTcpServer
 CONFIG   += console
 CONFIG   -= app_bundle
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    testserver.cpp
 
 
 include(AsioTcp/AsioTcp.pri)
+
+HEADERS += \
+    testserver.h

@@ -13,7 +13,7 @@ class QAsioTcpServer : public QObject
     Q_OBJECT
 public:
     explicit QAsioTcpServer(int threadSize = -1,QObject *parent = 0);
-    ~QAsioTcpServer();
+    virtual ~QAsioTcpServer();
     enum ListenType{
         IPV4,IPV6,Both,Address,None
     };

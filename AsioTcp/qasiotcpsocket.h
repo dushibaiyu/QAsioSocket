@@ -16,6 +16,7 @@ class QAsioTcpSocket : public QObject
     Q_OBJECT
 public:
     explicit QAsioTcpSocket(QObject *parent = 0);
+    virtual ~QAsioTcpSocket();
 
     enum SocketState {
         UnconnectedState = 0X00,
@@ -33,7 +34,7 @@ Q_SIGNALS:
     void readReadly();
     void connected();
     void disconnected();
-    void sentError(SocketErroSite site,const asio::error_code & erro_code);
+    void sentError(const QString & site,const asio::error_code & erro_code);
     void stateChange(SocketState state);
     void hostFound();
 public Q_SLOTS:
@@ -83,7 +84,6 @@ private:
     QQueue<QByteArray> writeQueue;
 private:
     QBuffer buffer;
-//    std::string data_;
     std::array<char,4096> data_;
     QMutex bufferMutex;
 private:
