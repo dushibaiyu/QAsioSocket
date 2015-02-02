@@ -7,7 +7,6 @@
 #endif
 #include "include_asio/asio.hpp"
 #include <QThread>
-//#include "asio/io_service.hpp"
 
 class IOServerThread : public QThread
 {

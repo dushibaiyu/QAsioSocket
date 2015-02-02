@@ -7,37 +7,33 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <QQueue>
-//#include "asio/ip/tcp.hpp"
+#include <array>
 
 class QAsioTcpServer;
 
-class QAsioTcpSocket : public QObject//,public asio::ip::tcp::socket
+class QAsioTcpSocket : public QObject
 {
     Q_OBJECT
 public:
     explicit QAsioTcpSocket(QObject *parent = 0);
 
     enum SocketState {
-        UnconnectedState,
-        ConnectingState,
-        ConnectedState
+        UnconnectedState = 0X00,
+        ConnectingState = 0X01,
+        ConnectedState = 0X02
     };
     enum SocketErroSite{
-        ConnectEorro,
-        WriteEorro,
-        ReadError,
-        FindHostError
+        ConnectEorro = 0X00,
+        ReadError = 0X01,
+        WriteEorro = 0X02,
+        FindHostError = 0X03
     };
-//    enum AdressType{
-//        IPV4,
-//        IPV6,
-//        DOMAIN
-//    };
+
 Q_SIGNALS:
     void readReadly();
     void connected();
     void disconnected();
-    void error(SocketErroSite site,const asio::error_code & erro_code);
+    void sentError(SocketErroSite site,const asio::error_code & erro_code);
     void stateChange(SocketState state);
     void hostFound();
 public Q_SLOTS:
@@ -87,7 +83,8 @@ private:
     QQueue<QByteArray> writeQueue;
 private:
     QBuffer buffer;
-    std::string data_;
+//    std::string data_;
+    std::array<char,4096> data_;
     QMutex bufferMutex;
 private:
     SocketState state_;
