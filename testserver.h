@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include "qasiotcpserver.h"
+#include <QTime>
+#include <QDebug>
 
 class TestServer : public QObject
 {
@@ -14,12 +16,17 @@ public:
 signals:
 
 public slots:
-    void listen(qint16 port = 6688) {server.listen(port);}
+    void listen(qint16 port = 6688) {
+        server.listen(port);
+        qDebug() << server.maxConnections();
+        startTime = QTime::currentTime();
+    }
 protected slots:
     void newCon(QAsioTcpSocket * socket);
     void readData();
 private:
     QAsioTcpServer server;
+    QTime startTime;
 };
 
 #endif // TESTSERVER_H

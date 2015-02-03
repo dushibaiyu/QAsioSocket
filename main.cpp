@@ -13,8 +13,8 @@ int main(int argc, char *argv[])
 //        qDebug() << "socketconned";
 //        sock.write(QByteArray("hahaha"));});
 //    QObject::connect(&sock,&QAsioTcpSocket::disconnected,[](){qDebug() << "disconnected";});
-//    QObject::connect(&sock,&QAsioTcpSocket::readReadly,[&](){qDebug() << "readReadly:" << sock.readAll();});
-//    QObject::connect(&sock,&QAsioTcpSocket::sentError,[&](QAsioTcpSocket::SocketErroSite site,const asio::error_code & /*erro_code*/){
+//    QObject::connect(&sock,&QAsioTcpSocket::readReadly,[&](){qDebug() << "readReadly:" << sock.readAll();sock.disconnectFromHost();});
+//    QObject::connect(&sock,&QAsioTcpSocket::sentError,[&](const QString & site,const asio::error_code & /*erro_code*/){
 //        qDebug() << "erro:" << site;
 //    });
     TestServer server;

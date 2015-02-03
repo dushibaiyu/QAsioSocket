@@ -12,6 +12,7 @@
 #include <functional>
 #include <QCoreApplication>
 
+//asio事件循环线程与server主线程有新连接交互的事件
 class QAsioNewEvent : public QEvent
 {
 public:
@@ -40,6 +41,11 @@ QAsioTcpServer::QAsioTcpServer(int threadSize, QObject *parent) :
 
 QAsioTcpServer::~QAsioTcpServer()
 {
+    close();
+    if (apv4 != nullptr) delete apv4;
+    if (apv6 != nullptr) delete apv6;
+    if (socketV6 != nullptr) delete socketV6;
+    if (socketV4 != nullptr) delete socketV4;
     for (int i = 0; i < threadSize_; ++i)
     {
         auto thread = iosserverList[i];
@@ -59,6 +65,8 @@ void QAsioTcpServer::close()
             apv6->close();
         }
     }
+    type_ = None;
+    ip_.clear();
 }
 
 bool QAsioTcpServer::linstenV4(const asio::ip::tcp::endpoint &endpoint)
@@ -80,7 +88,8 @@ bool QAsioTcpServer::linstenV4(const asio::ip::tcp::endpoint &endpoint)
         this->error_ = code;
         return false;
     }
-    socketV4 = new asio::ip::tcp::socket(iosserverList.at(lastState)->getIOServer());
+    if (socketV4 == nullptr)
+        socketV4 = new asio::ip::tcp::socket(iosserverList.at(lastState)->getIOServer());
     apv4->async_accept(*socketV4,std::bind(&QAsioTcpServer::appectHandleV4,this,std::placeholders::_1));
     return true;
 }
@@ -104,7 +113,8 @@ bool QAsioTcpServer::linstenV6(const asio::ip::tcp::endpoint &endpoint)
         this->error_ = code;
         return false;
     }
-    socketV6 = new asio::ip::tcp::socket(iosserverList.at(lastState)->getIOServer());
+    if (socketV6 == nullptr)
+        socketV6 = new asio::ip::tcp::socket(iosserverList.at(lastState)->getIOServer());
     apv6->async_accept(*socketV6,std::bind(&QAsioTcpServer::appectHandleV6,this,std::placeholders::_1));
     return true;
 }
@@ -141,7 +151,8 @@ bool QAsioTcpServer::listen(qint16 port, ListenType ltype)
     default:
         break;
     }
-
+    type_ = ltype;
+    ip_ = "0";
     if (!tmpbool)
         close();
     return tmpbool;
@@ -156,12 +167,16 @@ bool QAsioTcpServer::listen(const QString &ip, qint16 port)
     if (code) {
         this->error_ = code;
         tmpbool =  false;
-    }
-    asio::ip::tcp::endpoint endpot(address,port);
-    if (address.is_v4()) {
-        tmpbool = linstenV4(endpot);
-    } else if (address.is_v6()) {
-        tmpbool =  linstenV6(endpot);
+    } else {
+        ip_ = ip;
+        asio::ip::tcp::endpoint endpot(address,port);
+        if (address.is_v4()) {
+            tmpbool = linstenV4(endpot);
+            type_ = IPV4;
+        } else if (address.is_v6()) {
+            tmpbool =  linstenV6(endpot);
+            type_ = IPV6;
+        }
     }
     if (!tmpbool)
         close();

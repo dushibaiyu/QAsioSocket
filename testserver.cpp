@@ -1,6 +1,5 @@
 ﻿#include "testserver.h"
 #include "qasiotcpsocket.h"
-#include <QDebug>
 
 TestServer::TestServer(QObject *parent) : QObject(parent)
 {
@@ -22,6 +21,7 @@ void TestServer::readData()
     auto socket = qobject_cast<QAsioTcpSocket *>(sender());
     if (!socket) return;
     QByteArray data = socket->readAll();
-    qDebug() << data;
+//    qDebug() << data;
     socket->write(data);
+    qDebug()<<startTime.toString("HH:mm:ss.zzz")<<"\t\t\t"<<QTime::currentTime().toString("HH:mm:ss.zzz");
 }

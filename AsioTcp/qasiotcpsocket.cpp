@@ -161,6 +161,15 @@ void QAsioTcpSocket::customEvent(QEvent *event)
 void QAsioTcpSocket::resolverHandle(const asio::error_code &error,asio::ip::tcp::resolver::iterator iterator)
 {
     if (!error) {
+        if (socket_ != nullptr) {
+            if (!socket_->is_open()){
+                delete socket_;
+                socket_ = nullptr;
+            }
+        }
+        if (socket_ == nullptr) {
+            socket_ = new asio::ip::tcp::socket(ioserver->getIOServer());
+        }
         asio::async_connect(*socket_,iterator,
                       std::bind(&QAsioTcpSocket::connectedHandler,this,std::placeholders::_1,std::placeholders::_2));
         QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::FindHosted,error));
@@ -196,6 +205,7 @@ void QAsioTcpSocket::connectedHandler(const asio::error_code &error,asio::ip::tc
         state_ = ConnectedState;
         socket_->async_read_some(asio::buffer(data_,data_.max_size()),
                                  std::bind(&QAsioTcpSocket::readHandler,this,std::placeholders::_1,std::placeholders::_2));
+        this->peerPoint = socket_->remote_endpoint(erro_code);
         QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::Connected,error));
     } else {
         asio::ip::tcp::resolver::iterator end;
@@ -209,7 +219,7 @@ void QAsioTcpSocket::connectedHandler(const asio::error_code &error,asio::ip::tc
 
 void QAsioTcpSocket::disconnectFromHost()
 {
+    qDebug() << "QAsioTcpSocket::disconnectFromHost()";
     if (state_ == UnconnectedState) return;
     socket_->shutdown(asio::ip::tcp::socket::shutdown_both);
-    socket_->close();
 }
