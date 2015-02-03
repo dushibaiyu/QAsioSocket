@@ -2,7 +2,6 @@
 #define TESTSERVER_H
 
 #include <QObject>
-#include <QObjectCleanupHandler>
 #include "qasiotcpserver.h"
 
 class TestServer : public QObject
@@ -21,7 +20,6 @@ protected slots:
     void readData();
 private:
     QAsioTcpServer server;
-    QObjectCleanupHandler handler;
 };
 
 #endif // TESTSERVER_H

@@ -27,7 +27,7 @@ private:
 const QEvent::Type QAsioNewEvent::QAsioNewEventType = (QEvent::Type)QEvent::registerEventType();
 
 QAsioTcpServer::QAsioTcpServer(int threadSize, QObject *parent) :
-    QObject(parent),threadSize_(threadSize)
+    QObject(parent),threadSize_(threadSize),max_connections(asio::socket_base::max_connections)
 {
     if (threadSize_ <= 0) threadSize_ = 2;
     for (int i = 0; i < threadSize_; ++i)
@@ -49,10 +49,16 @@ QAsioTcpServer::~QAsioTcpServer()
 
 void QAsioTcpServer::close()
 {
-    if (apv4 != nullptr)
-        apv4->close();
-    if (apv6 != nullptr)
-        apv6->close();
+    if (apv4 != nullptr) {
+        if (apv4->is_open()){
+            apv4->close();
+        }
+    }
+    if (apv6 != nullptr) {
+        if (apv6->is_open()){
+            apv6->close();
+        }
+    }
 }
 
 bool QAsioTcpServer::linstenV4(const asio::ip::tcp::endpoint &endpoint)
@@ -60,22 +66,22 @@ bool QAsioTcpServer::linstenV4(const asio::ip::tcp::endpoint &endpoint)
     goForward();
     if (apv4 == nullptr)
         apv4 = new asio::ip::tcp::acceptor(iosserverList.at(lastState)->getIOServer());
-    else {
-        if (apv4->is_open()){
-            apv4->close();
-        }
-        delete apv4;
-        apv4 = new asio::ip::tcp::acceptor(iosserverList.at(lastState)->getIOServer());
-    }
     asio::error_code code;
+    apv4->open(endpoint.protocol());
     apv4->bind(endpoint,code);
     if (code)
     {
         this->error_ = code;
         return false;
     }
+    apv4->listen(max_connections, code);
+    if (code)
+    {
+        this->error_ = code;
+        return false;
+    }
     socketV4 = new asio::ip::tcp::socket(iosserverList.at(lastState)->getIOServer());
-    apv6->async_accept(*socketV4,std::bind(&QAsioTcpServer::appectHandleV4,this,std::placeholders::_1));
+    apv4->async_accept(*socketV4,std::bind(&QAsioTcpServer::appectHandleV4,this,std::placeholders::_1));
     return true;
 }
 
@@ -84,15 +90,15 @@ bool QAsioTcpServer::linstenV6(const asio::ip::tcp::endpoint &endpoint)
     goForward();
     if (apv6 == nullptr)
         apv6 = new asio::ip::tcp::acceptor(iosserverList.at(lastState)->getIOServer());
-    else {
-        if (apv6->is_open()){
-            apv6->close();
-        }
-        delete apv6;
-        apv6 = new asio::ip::tcp::acceptor(iosserverList.at(lastState)->getIOServer());
-    }
+    apv6->open(endpoint.protocol());
     asio::error_code code;
     apv6->bind(endpoint,code);
+    if (code)
+    {
+        this->error_ = code;
+        return false;
+    }
+    apv6->listen(max_connections, code);
     if (code)
     {
         this->error_ = code;
@@ -106,6 +112,7 @@ bool QAsioTcpServer::linstenV6(const asio::ip::tcp::endpoint &endpoint)
 bool QAsioTcpServer::listen(qint16 port, ListenType ltype)
 {
     bool tmpbool = false;
+    close();
     switch (ltype) {
     case IPV4 :
     {
@@ -135,12 +142,15 @@ bool QAsioTcpServer::listen(qint16 port, ListenType ltype)
         break;
     }
 
+    if (!tmpbool)
+        close();
     return tmpbool;
 }
 
 bool QAsioTcpServer::listen(const QString &ip, qint16 port)
 {
     bool tmpbool = false;
+    close();
     asio::error_code code;
     asio::ip::address address = asio::ip::address::from_string(ip.toStdString(),code);
     if (code) {
@@ -153,6 +163,8 @@ bool QAsioTcpServer::listen(const QString &ip, qint16 port)
     } else if (address.is_v6()) {
         tmpbool =  linstenV6(endpot);
     }
+    if (!tmpbool)
+        close();
     return tmpbool;
 }
 

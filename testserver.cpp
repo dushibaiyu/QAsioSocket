@@ -15,7 +15,6 @@ void TestServer::newCon(QAsioTcpSocket * socket)
 {
     connect(socket,&QAsioTcpSocket::readReadly,this,&TestServer::readData);
     connect(socket,&QAsioTcpSocket::disconnected,socket,&QAsioTcpSocket::deleteLater);
-    handler.add(socket);
 }
 
 void TestServer::readData()

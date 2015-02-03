@@ -18,6 +18,12 @@ public:
         IPV4,IPV6,Both,Address,None
     };
     asio::error_code getEorror() const {return error_;}
+    void setMaxConnections(int max) {
+        if (max > 100)
+            max_connections = max;
+        else
+            max_connections = asio::socket_base::max_connections;
+    }
 Q_SIGNALS:
     void newConnection(QAsioTcpSocket * socket);
 public Q_SLOTS:
@@ -38,6 +44,7 @@ protected:
     inline bool linstenV6(const asio::ip::tcp::endpoint & endpoint);
 private:
     int lastState = 0,threadSize_;
+    int max_connections;
     qint16 port_;
     ListenType type_ = None;
     QString ip_;
