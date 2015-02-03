@@ -37,24 +37,14 @@ public:
     /// IPV4&emsp;&emsp; 只是监听IPv4 <br/>
     /// IPV6&emsp;&emsp; 只是监听IPv6 <br/>
     /// Both&emsp;&emsp; 同时监听IPv4和IPv6 <br/>
-    /// None&emsp;&emsp; 不监听任何端口
+    /// None&emsp;&emsp; 不监听任何端口 <br/>
+    /// TODO:在linux下测试的是IPV4和IPV6都是可以全部监听的
     enum ListenType{
         IPV4,IPV6,Both,None
     };
 
     /// @brief 获取出错的错误信息
     asio::error_code getEorror() const {return error_;}
-
-    /// @brief 设置监听的最大连接数
-    /// @param max 最大连接数
-    /// @note 不设置默认为asio::socket_base::max_connections <br/>
-    /// 如果最小小于100，则不生效，使用默认的
-    void setMaxConnections(int max) {
-        if (max > 100)
-            max_connections = max;
-        else
-            max_connections = asio::socket_base::max_connections;
-    }
 
     /// @brief 当前监听的端口
     qint16 listenPort()const {return port_;}
@@ -70,9 +60,6 @@ public:
 
     /// @brief 当前服务端开启的asio::io_service的数目
     int getIOSize() const {return threadSize_;}
-
-    /// @brief 当前监听的最大连接数
-    int maxConnections() const {return max_connections;}
 
 Q_SIGNALS:
     /// @brief Singanl 信号：有新连接发送此信号
@@ -113,7 +100,6 @@ protected:
     inline bool linstenV6(const asio::ip::tcp::endpoint & endpoint);
 private:
     int lastState = 0,threadSize_;
-    int max_connections;
     qint16 port_;
     ListenType type_ = None;
     QString ip_;

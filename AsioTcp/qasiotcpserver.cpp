@@ -28,7 +28,7 @@ private:
 const QEvent::Type QAsioNewEvent::QAsioNewEventType = (QEvent::Type)QEvent::registerEventType();
 
 QAsioTcpServer::QAsioTcpServer(int threadSize, QObject *parent) :
-    QObject(parent),threadSize_(threadSize),max_connections(asio::socket_base::max_connections)
+    QObject(parent),threadSize_(threadSize)
 {
     if (threadSize_ <= 0) threadSize_ = 2;
     for (int i = 0; i < threadSize_; ++i)
@@ -82,7 +82,7 @@ bool QAsioTcpServer::linstenV4(const asio::ip::tcp::endpoint &endpoint)
         this->error_ = code;
         return false;
     }
-    apv4->listen(max_connections, code);
+    apv4->listen(asio::socket_base::max_connections, code);
     if (code)
     {
         this->error_ = code;
@@ -107,7 +107,7 @@ bool QAsioTcpServer::linstenV6(const asio::ip::tcp::endpoint &endpoint)
         this->error_ = code;
         return false;
     }
-    apv6->listen(max_connections, code);
+    apv6->listen(asio::socket_base::max_connections, code);
     if (code)
     {
         this->error_ = code;
@@ -138,9 +138,15 @@ bool QAsioTcpServer::listen(qint16 port, ListenType ltype)
         break;
     case Both :
     {
-        asio::ip::tcp::endpoint endpot4(asio::ip::tcp::v6(),port);
-        asio::ip::tcp::endpoint endpot6(asio::ip::tcp::v4(),port);
-        if (linstenV4(endpot4) && linstenV6(endpot6))
+        asio::ip::tcp::endpoint endpot4(asio::ip::tcp::v4(),port);
+#ifdef Q_OS_WIN
+        asio::ip::tcp::endpoint endpot6(asio::ip::tcp::v6(),port);
+#endif
+        if (linstenV4(endpot4)
+        #ifdef Q_OS_WIN
+                && linstenV6(endpot6)
+        #endif
+                )
             tmpbool = true;
         else {
             this->close();
@@ -152,6 +158,9 @@ bool QAsioTcpServer::listen(qint16 port, ListenType ltype)
         break;
     }
     type_ = ltype;
+#ifdef Q_OS_LINUX
+    type_ = Both;
+#endif
     ip_ = "0";
     if (!tmpbool)
         close();

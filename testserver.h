@@ -17,9 +17,10 @@ signals:
 
 public slots:
     void listen(qint16 port = 6688) {
-        server.listen(port);
+        qDebug() << server.listen(port);
         qDebug() << server.maxConnections();
         startTime = QTime::currentTime();
+        qDebug() << startTime;
     }
 protected slots:
     void newCon(QAsioTcpSocket * socket);
