@@ -57,10 +57,16 @@ void QAsioTcpSocket::readHandler(const asio::error_code &error, std::size_t byte
         bufferMutex.unlock();
         socket_->async_read_some(asio::buffer(data_,data_.max_size()),
                                  std::bind(&QAsioTcpSocket::readHandler,this,std::placeholders::_1,std::placeholders::_2));
+//        qDebug() << "Socket ID" << socketDescriptor() << "\t Thread ID" << QThread::currentThreadId();
         QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::ReadReadly,error));
     } else {
         state_ = UnconnectedState;
         socket_->close();
+        if (isDisconDelData) {
+            bufferMutex.lock();
+            buffer.close();
+            bufferMutex.unlock();
+        }
         if (error.value() == 2) {
             QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::DisConnect,error));
         } else {
@@ -119,6 +125,7 @@ void QAsioTcpSocket::customEvent(QEvent *event)
         auto e = static_cast<QAsioEvent*>(event);
         switch (e->getConnectedType()) {
         case QAsioEvent::ReadReadly :
+            if (isDisconDelData && state_ != ConnectedState) break;
             emit readReadly();
             break;
         case QAsioEvent::Connected :
@@ -128,6 +135,7 @@ void QAsioTcpSocket::customEvent(QEvent *event)
         case QAsioEvent::ConnectEorro :
             emit sentError(tr("连接到错误"),e->getErrorCode());
             emit stateChange(UnconnectedState);
+            emit disconnected();
             break;
         case QAsioEvent::DisConnect :
             emit stateChange(UnconnectedState);
@@ -149,6 +157,7 @@ void QAsioTcpSocket::customEvent(QEvent *event)
         case QAsioEvent::FindHostEorro :
             emit sentError(tr("查找服务器错误"),e->getErrorCode());
             emit stateChange(UnconnectedState);
+            emit disconnected();
             break;
         default:
             break;

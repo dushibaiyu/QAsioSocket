@@ -131,6 +131,7 @@ public:
         }
     }
 
+    void setDisconnecdDeleteBuffer(bool isdel = false) {isDisconDelData = isdel;}
     /// @brief 获取当前连接的端点
     asio::ip::tcp::endpoint peerEndPoint() const {return this->peerPoint;}
     /// @brief 当前的链接状态
@@ -170,7 +171,7 @@ private:
     asio::error_code erro_code;
     asio::ip::tcp::endpoint peerPoint;
     asio::ip::tcp::resolver * resolver_ = nullptr;
-
+    bool isDisconDelData = false;
     Q_DISABLE_COPY(QAsioTcpSocket)
 };
 
