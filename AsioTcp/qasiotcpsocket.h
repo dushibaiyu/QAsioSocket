@@ -119,6 +119,15 @@ public:
     /// @brief 是否读取到最后了
     bool atEnd() const{return buffer.atEnd();}
 
+    /// @brief 获取socket的本地描述符
+    int ​socketDescriptor() const {
+        if (socket_ == nullptr) {
+            return -1;
+        } else {
+            return static_cast<int>(socket_->native_handle());
+        }
+    }
+
     /// @brief 获取当前连接的端点
     asio::ip::tcp::endpoint peerEndPoint() const {return this->peerPoint;}
     /// @brief 当前的链接状态

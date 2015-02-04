@@ -68,7 +68,11 @@ void QAsioTcpSocket::readHandler(const asio::error_code &error, std::size_t byte
     } else {
         state_ = UnconnectedState;
         socket_->close();
-        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::ReadError,error));
+        if (error.value() == 2) {
+            QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::DisConnect,error));
+        } else {
+            QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::ReadError,error));
+        }
     }
 }
 
@@ -89,7 +93,11 @@ void QAsioTcpSocket::writeHandler(const asio::error_code &error, std::size_t byt
     }
     state_ = UnconnectedState;
     socket_->close();
-    QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::WriteEorro,error));
+    if (error.value() == 2) {
+        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::DisConnect,error));
+    } else {
+        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::WriteEorro,error));
+    }
 }
 
 bool QAsioTcpSocket::write(const QByteArray &data)
@@ -161,12 +169,6 @@ void QAsioTcpSocket::customEvent(QEvent *event)
 void QAsioTcpSocket::resolverHandle(const asio::error_code &error,asio::ip::tcp::resolver::iterator iterator)
 {
     if (!error) {
-        if (socket_ != nullptr) {
-            if (!socket_->is_open()){
-                delete socket_;
-                socket_ = nullptr;
-            }
-        }
         if (socket_ == nullptr) {
             socket_ = new asio::ip::tcp::socket(ioserver->getIOServer());
         }
