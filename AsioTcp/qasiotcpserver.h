@@ -84,29 +84,25 @@ public Q_SLOTS:
     void close();
 
 protected:
-    //有IP4的新连接的回调
-    void appectHandleV4(const asio::error_code & code);
-    //有IP6的新连接的回调
-    void appectHandleV6(const asio::error_code & code);
+    //有新连接的回调
+    void appectHandle(const asio::error_code & code);
 
     //自定义事件的处理，与asio事件循环线程发过来的事件的处理
     void customEvent(QEvent * e);
 
     //切换新连接采用asio::io_service，采用公平队列，一次轮询
     inline void goForward(){lastState ++; if (lastState == threadSize_) lastState = 0;}
-    //监听IP4
-    inline bool linstenV4(const asio::ip::tcp::endpoint & endpoint);
-    //监听IP6
-    inline bool linstenV6(const asio::ip::tcp::endpoint & endpoint);
+    //监听acceptor
+    inline bool linstenAp(asio::ip::tcp::acceptor * ap,const asio::ip::tcp::endpoint & endpoint);
 private:
     int lastState = 0,threadSize_;
     qint16 port_;
     ListenType type_ = None;
     QString ip_;
     asio::error_code error_;
-    asio::ip::tcp::acceptor * apv4 = nullptr, * apv6 = nullptr;
+    asio::ip::tcp::acceptor * apv4 = nullptr, * apv6 = nullptr, * apall = nullptr;
     QVector<IOServerThread *> iosserverList;
-    asio::ip::tcp::socket * socketV6 = nullptr, * socketV4 = nullptr;
+    asio::ip::tcp::socket * socket_ = nullptr;
 };
 
 #endif // QASIOTCPSERVER_H

@@ -1,4 +1,4 @@
-//
+﻿//
 // ip/tcp.hpp
 // ~~~~~~~~~~
 //
@@ -58,6 +58,12 @@ public:
   static tcp v6()
   {
     return tcp(ASIO_OS_DEF(AF_INET6));
+  }
+
+  /// Construct to represent the IPAll TCP protocol.
+  static tcp all()
+  {
+    return tcp(ASIO_OS_DEF(AF_UNSPEC));
   }
 
   /// Obtain an identifier for the type of the protocol.
