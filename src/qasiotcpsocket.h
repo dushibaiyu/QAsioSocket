@@ -16,6 +16,7 @@
 #include <QMutexLocker>
 #include <QQueue>
 #include <array>
+#include <QAtomicInt>
 
 #ifndef QASIOSOCKET_LIBRARY
 #define QASIOSOCKET_LIBRARY
@@ -138,13 +139,18 @@ public:
         }
     }
 
-    void setDisconnecdDeleteBuffer(bool isdel = false) {isDisconDelData = isdel;}
+    /// @brief 设置是不是断开链接就立刻清除用户缓存，并停止发送数据就绪信号
+    /// @note 默认是false，不清除和停止信号的。<br/>
+    ///  但是在QAsioTcpServer里发送出来的是true，既清除和停止信号
+    void setDisconnecdDeleteBuffer(bool isdel) {isDisconDelData = isdel;}
+    /// @brief 当前的断开就清楚数据的设置
+    bool disconnecdDeleteBuffer() const {return isDisconDelData;}
 
     /// @brief 获取当前连接的端点
     asio::ip::tcp::endpoint peerEndPoint() const {return this->peerPoint;}
 
     /// @brief 当前的链接状态
-    SocketState state() const {return this->state_;}
+    SocketState state() const { int tp = state_; return static_cast<SocketState>(tp);}
 
     /// @brief 获取错误
     asio::error_code error() const {return this->erro_code;}
@@ -180,7 +186,7 @@ private:
     std::array<char,4096> data_;
 
 private:
-    SocketState state_;
+    QAtomicInt state_ = UnconnectedState;//TODO：变成原子操作
     asio::ip::tcp::socket * socket_ = nullptr;
     asio::error_code erro_code;
     asio::ip::tcp::endpoint peerPoint;

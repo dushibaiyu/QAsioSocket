@@ -8,7 +8,7 @@
 #include <QDebug>
 
 QAsioTcpSocket::QAsioTcpSocket(QObject *parent) :
-    QObject(parent),state_(UnconnectedState)
+    QObject(parent)
 {
     socket_ = new asio::ip::tcp::socket(IOServerThread::getIOThread()->getIOServer());
 }
@@ -68,9 +68,9 @@ void QAsioTcpSocket::readHandler(const asio::error_code &error, std::size_t byte
             bufferMutex.unlock();
         }
         if (error.value() == 2) {
-            QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::DisConnect,error));
+            QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::DisConnect,error),Qt::HighEventPriority);
         } else {
-            QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::ReadError,error));
+            QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::ReadError,error),Qt::HighEventPriority);
         }
     }
 }
@@ -93,9 +93,9 @@ void QAsioTcpSocket::writeHandler(const asio::error_code &error, std::size_t byt
     state_ = UnconnectedState;
     socket_->close();
     if (error.value() == 2) {
-        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::DisConnect,error));
+        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::DisConnect,error),Qt::HighEventPriority);
     } else {
-        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::WriteEorro,error));
+        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::WriteEorro,error),Qt::HighEventPriority);
     }
 }
 

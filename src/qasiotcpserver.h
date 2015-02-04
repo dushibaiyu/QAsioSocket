@@ -89,6 +89,9 @@ public Q_SLOTS:
     void close();
 
 protected:
+    virtual void incomingConnection(QAsioTcpSocket *socket);
+
+protected:
     //有新连接的回调
     void appectHandle(const asio::error_code & code);
 

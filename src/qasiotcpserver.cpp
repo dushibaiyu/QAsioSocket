@@ -200,9 +200,15 @@ void QAsioTcpServer::customEvent(QEvent *e)
     if (e->type() == QAsioNewEvent::QAsioNewEventType)
     {
         QAsioNewEvent * newcon = static_cast<QAsioNewEvent *>(e);
-        emit newConnection(newcon->getNewSocket());
+        incomingConnection(newcon->getNewSocket());
         e->accept();
     } else {
         QObject::customEvent(e);
     }
+}
+
+void QAsioTcpServer::incomingConnection(QAsioTcpSocket * socket)
+{
+    socket->setDisconnecdDeleteBuffer(true);
+    emit newConnection(socket);
 }

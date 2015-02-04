@@ -9,8 +9,11 @@ MainWindow::MainWindow(QWidget *parent) :
     socket = new QAsioTcpSocket(this);
     ui->pushSent->setEnabled(false);
     this->ui->timeBut->setEnabled(false);
-    connect(socket,&QAsioTcpSocket::readReadly,
-            [&](){this->ui->textEdit->append(tr("%1 Server Say：%2").arg(QTime::currentTime().toString("hh:mm:ss.zzz")).arg(QString(this->socket->readAll())));});
+    connect(socket,&QAsioTcpSocket::readReadly,[&](){
+        this->ui->textEdit->append(tr("%1 Server Say：%2").arg(QTime::currentTime().toString("hh:mm:ss.zzz"))
+                                   .arg(QString(this->socket->readAll())));
+            qDebug() << socket->state();
+    });
     connect(socket,&QAsioTcpSocket::sentError,this,&MainWindow::readError);
     connect(&tm,&QTimer::timeout,[&](){
             int i = qrand() % 6;
@@ -55,7 +58,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushConnect_clicked()
 {
-    qDebug() << "点击连接：" ;
+    qDebug() << "点击连接：" << socket->state();
     if ("连接" == this->ui->pushConnect->text())
     {
         QString ipAdd(this->ui->txtIp->text()), portd(this->ui->txtPort->text());
