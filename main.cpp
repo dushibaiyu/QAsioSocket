@@ -1,6 +1,6 @@
 ﻿#include <QCoreApplication>
 #include <QDebug>
-#include "qasiotcpsocket.h"
+//#include "qasiotcpsocket.h"
 #include "testserver.h"
 
 int main(int argc, char *argv[])

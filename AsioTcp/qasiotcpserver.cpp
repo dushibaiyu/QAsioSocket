@@ -76,6 +76,7 @@ bool QAsioTcpServer::linstenV4(const asio::ip::tcp::endpoint &endpoint)
         apv4 = new asio::ip::tcp::acceptor(iosserverList.at(lastState)->getIOServer());
     asio::error_code code;
     apv4->open(endpoint.protocol());
+    apv4->set_option(asio::ip::tcp::acceptor::reuse_address(true),code);
     apv4->bind(endpoint,code);
     if (code)
     {
@@ -99,8 +100,9 @@ bool QAsioTcpServer::linstenV6(const asio::ip::tcp::endpoint &endpoint)
     goForward();
     if (apv6 == nullptr)
         apv6 = new asio::ip::tcp::acceptor(iosserverList.at(lastState)->getIOServer());
-    apv6->open(endpoint.protocol());
     asio::error_code code;
+    apv6->open(endpoint.protocol());
+    apv6->set_option(asio::ip::tcp::acceptor::reuse_address(true),code);
     apv6->bind(endpoint,code);
     if (code)
     {
@@ -143,7 +145,7 @@ bool QAsioTcpServer::listen(qint16 port, ListenType ltype)
         asio::ip::tcp::endpoint endpot6(asio::ip::tcp::v6(),port);
 #endif
         if (linstenV4(endpot4)
-        #ifdef Q_OS_WIN
+       #ifdef Q_OS_WIN
                 && linstenV6(endpot6)
         #endif
                 )
