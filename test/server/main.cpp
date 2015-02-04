@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     TestServer server;
     server.listen();
 
-    qDebug() << "yy";
+    qDebug() << "Begin";
 
     int i = a.exec();
     qDebug() << "end";

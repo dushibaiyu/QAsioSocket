@@ -50,6 +50,7 @@ public:
 
     /// @brief 获取事件的错误信息
     asio::error_code getErrorCode() const {return erro_code;}
+
 private:
     ConnectedEvent cType_;
     asio::error_code erro_code;

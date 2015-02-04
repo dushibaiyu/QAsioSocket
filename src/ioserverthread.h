@@ -29,10 +29,13 @@ public:
     explicit IOServerThread(QObject *parent = 0);
     ~IOServerThread();
 
+    /// @brief 获取唯一的一个后台的io_server
     static QPointer<IOServerThread> & getIOThread();
 public:
+
     /// @brief 获取线程中运行的asio::io_service的引用
     asio::io_service & getIOServer(){return server;}
+
 protected:
     void run();
 private:

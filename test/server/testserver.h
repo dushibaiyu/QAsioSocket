@@ -17,8 +17,8 @@ signals:
 
 public slots:
     void listen(qint16 port = 2048) {
-        qDebug() << server.listen(port);
-        qDebug() << asio::socket_base::max_connections;
+        qDebug() << "listen :" <<  server.listen(port);
+        qDebug() << "asio::socket_base::max_connections :" << asio::socket_base::max_connections;
         startTime = QTime::currentTime();
         qDebug() << startTime;
     }

@@ -20,6 +20,7 @@
 #endif
 
 class QAsioTcpSocket;
+
 /// @brief TcpServer的简单封装
 /// @note 这是最自由化的版本，server不管理链接过来的链接，后续会增加管理的便捷类
 class QASIOSOCKET_LIBRARY QAsioTcpServer : public QObject
