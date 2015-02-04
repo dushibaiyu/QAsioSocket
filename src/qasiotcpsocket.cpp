@@ -7,17 +7,10 @@
 #include <QCoreApplication>
 #include <QDebug>
 
-QPointer<IOServerThread> QAsioTcpSocket::ioserver = nullptr;
-
 QAsioTcpSocket::QAsioTcpSocket(QObject *parent) :
     QObject(parent),state_(UnconnectedState)
 {
-    if(ioserver.isNull())
-    {
-        ioserver = QPointer<IOServerThread>(new IOServerThread);
-        ioserver->start();
-    }
-    socket_ = new asio::ip::tcp::socket(ioserver->getIOServer());
+    socket_ = new asio::ip::tcp::socket(IOServerThread::getIOThread()->getIOServer());
 }
 
 QAsioTcpSocket::QAsioTcpSocket(asio::ip::tcp::socket * socket, QObject *parent) :
@@ -170,7 +163,7 @@ void QAsioTcpSocket::resolverHandle(const asio::error_code &error,asio::ip::tcp:
 {
     if (!error) {
         if (socket_ == nullptr) {
-            socket_ = new asio::ip::tcp::socket(ioserver->getIOServer());
+            socket_ = new asio::ip::tcp::socket(IOServerThread::getIOThread()->getIOServer());
         }
         asio::async_connect(*socket_,iterator,
                       std::bind(&QAsioTcpSocket::connectedHandler,this,std::placeholders::_1,std::placeholders::_2));

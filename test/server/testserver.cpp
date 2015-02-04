@@ -12,6 +12,7 @@ TestServer::~TestServer()
 
 void TestServer::newCon(QAsioTcpSocket * socket)
 {
+    qDebug() << "newCon " << socket->socketDescriptor();
     connect(socket,&QAsioTcpSocket::readReadly,this,&TestServer::readData);
     connect(socket,&QAsioTcpSocket::disconnected,socket,&QAsioTcpSocket::deleteLater);
 }

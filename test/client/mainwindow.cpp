@@ -6,31 +6,51 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    tcpClient = new QTcpSocket(this);
+    socket = new QAsioTcpSocket(this);
     ui->pushSent->setEnabled(false);
     this->ui->timeBut->setEnabled(false);
-    tcpClient->abort();
-    connect(tcpClient,&QTcpSocket::readyRead,
-            [&](){this->ui->textEdit->append(tr("%1 Server Say：%2").arg(QTime::currentTime().toString("hh:mm:ss.zzz")).arg(QString(this->tcpClient->readAll())));});
-    connect(tcpClient,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(ReadError(QAbstractSocket::SocketError)));
+    connect(socket,&QAsioTcpSocket::readReadly,
+            [&](){this->ui->textEdit->append(tr("%1 Server Say：%2").arg(QTime::currentTime().toString("hh:mm:ss.zzz")).arg(QString(this->socket->readAll())));});
+    connect(socket,&QAsioTcpSocket::sentError,this,&MainWindow::readError);
     connect(&tm,&QTimer::timeout,[&](){
             int i = qrand() % 6;
             this->ui->textEdit->append(tr("%1 Timer Sent: %2").arg(QTime::currentTime().toString("hh:mm:ss.zzz")).arg(list.at(i)));
-            tcpClient->write(list.at(i).toUtf8());
+            socket->write(list.at(i).toUtf8());
     });
-    connect(tcpClient,&QTcpSocket::disconnected,[](){qDebug()<< "123333" ;});
+    connect(socket,&QAsioTcpSocket::connected,
+            [&](){
+        ui->pushConnect->setText("断开");
+        ui->textEdit->append("连接服务器成功");
+        ui->pushSent->setEnabled(true);
+        this->ui->txtIp->setEnabled(false);
+        this->ui->txtPort->setEnabled(false);
+        this->ui->timeBut->setEnabled(true);
+        ui->pushConnect->setEnabled(true);
+    });
+    connect(socket,&QAsioTcpSocket::disconnected,[&](){
+        qDebug()<< "QTcpSocket::disconnected" ;
+        ui->pushConnect->setText("连接");
+        ui->textEdit->append("断开服务器");
+        ui->pushSent->setEnabled(false);
+        this->ui->txtIp->setEnabled(true);
+        this->ui->txtPort->setEnabled(true);
+        tm.stop();
+        this->ui->timeBut->setEnabled(false);
+        this->ui->lineEdit->setEnabled(true);
+        this->ui->timeBut->setText("启动定时");
+    });
     list << "我是谁?" << "渡世白玉" << "hello" << "哈哈哈哈哈" << "你是坏蛋!" <<  "测试一下下了" << "不知道写什么" ;
     QTime time;
     time= QTime::currentTime();
     qsrand(time.msec()+time.second()*1000);
     this->ui->txtIp->setText("127.0.0.1");
-    this->ui->txtPort->setText("6666");
+    this->ui->txtPort->setText("2048");
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete tcpClient;
+    delete socket;
 }
 
 void MainWindow::on_pushConnect_clicked()
@@ -46,32 +66,12 @@ void MainWindow::on_pushConnect_clicked()
         }
 //        QHostAddress add = QHostAddress::LocalHostIPv6;
 //        qDebug() << add;
-        tcpClient->connectToHost(ipAdd,portd.toInt());
-        if (tcpClient->waitForConnected(1000))
-        {
-            ui->pushConnect->setText("断开");
-            ui->textEdit->append("连接服务器成功");
-            ui->pushSent->setEnabled(true);
-            this->ui->txtIp->setEnabled(false);
-            this->ui->txtPort->setEnabled(false);
-            this->ui->timeBut->setEnabled(true);
-        }
+        socket->connectToHost(ipAdd,portd.toInt());
+        this->ui->pushConnect->setEnabled(false);
     }
     else
     {
-        tcpClient->disconnectFromHost();
-        if (tcpClient->state() == QAbstractSocket::UnconnectedState || tcpClient->waitForDisconnected(1000) )
-        {
-            ui->pushConnect->setText("连接");
-            ui->textEdit->append("断开服务器");
-            ui->pushSent->setEnabled(false);
-            this->ui->txtIp->setEnabled(true);
-            this->ui->txtPort->setEnabled(true);
-            tm.stop();
-            this->ui->timeBut->setEnabled(false);
-            this->ui->lineEdit->setEnabled(true);
-            this->ui->timeBut->setText("启动定时");
-        }
+        socket->disconnectFromHost();
     }
 }
 
@@ -83,16 +83,16 @@ void MainWindow::on_pushSent_clicked()
     {
         return ;
     }
-    tcpClient->write(data.toUtf8());
+    socket->write(data.toUtf8());
     ui->textEdit->append(tr("Say：%1").arg(data));
 }
 
-void MainWindow::ReadError(QAbstractSocket::SocketError)
+void MainWindow::readError(const QString & site,const asio::error_code & erro_code)
 {
-    tcpClient->disconnectFromHost();
     ui->pushConnect->setText("连接");
-    ui->textEdit->append(tr("连接出错：%1").arg(tcpClient->errorString()));
+    ui->textEdit->append(tr("连接出错：%1 : %2").arg(site).arg(erro_code.value()));
     ui->pushSent->setEnabled(false);
+    ui->pushConnect->setEnabled(true);
     this->ui->txtIp->setEnabled(true);
     this->ui->txtPort->setEnabled(true);
     tm.stop();

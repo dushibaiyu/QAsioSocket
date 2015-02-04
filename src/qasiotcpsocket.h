@@ -12,16 +12,19 @@
 
 #include <QBuffer>
 #include "ioserverthread.h"
-#include <QPointer>
 #include <QMutex>
 #include <QMutexLocker>
 #include <QQueue>
 #include <array>
 
+#ifndef QASIOSOCKET_LIBRARY
+#define QASIOSOCKET_LIBRARY
+#endif
+
 class QAsioTcpServer;
 
 /// @brief TcpSocket的封装,接口按照QTcpsocket的设计的
-class QAsioTcpSocket : public QObject
+class QASIOSOCKET_LIBRARY QAsioTcpSocket : public QObject
 {
     Q_OBJECT
 public:
@@ -120,7 +123,7 @@ public:
     bool atEnd() const{return buffer.atEnd();}
 
     /// @brief 获取socket的本地描述符
-    int ​socketDescriptor() const {
+    int socketDescriptor() const {
         if (socket_ == nullptr) {
             return -1;
         } else {
@@ -151,9 +154,6 @@ protected:
 protected:
     // 处理自定义事件，就是asio事件循环发送过来的事件
     void customEvent(QEvent * event);
-
-    //如果直接使用的话，默认的IOserver
-    static QPointer<IOServerThread> ioserver;
 private:
     //发送的队列和队列的锁
     QMutex writeMutex;

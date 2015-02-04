@@ -16,7 +16,7 @@ SOURCES += main.cpp \
     testserver.cpp
 
 win32:!win32-g++:DEFINES += NOMINMAX
-include(AsioTcp/AsioTcp.pri)
+include(../../src/AsioTcp.pri)
 
 HEADERS += \
     testserver.h

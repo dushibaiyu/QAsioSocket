@@ -15,10 +15,14 @@
 #include "ioserverthread.h"
 #include <QMutex>
 
+#ifndef QASIOSOCKET_LIBRARY
+#define QASIOSOCKET_LIBRARY
+#endif
+
 class QAsioTcpSocket;
 /// @brief TcpServer的简单封装
 /// @note 这是最自由化的版本，server不管理链接过来的链接，后续会增加管理的便捷类
-class QAsioTcpServer : public QObject
+class QASIOSOCKET_LIBRARY QAsioTcpServer : public QObject
 {
     Q_OBJECT
 public:
