@@ -79,7 +79,7 @@ bool QAsioTcpServer::linstenAp(asio::ip::tcp::acceptor * ap,const asio::ip::tcp:
     goForward();
     asio::error_code code;
     ap->open(endpoint.protocol());
-    ap->set_option(asio::ip::tcp::acceptor::reuse_address(true),code);
+    ap->set_option(asio::ip::tcp::acceptor::reuse_address(false),code);
     ap->bind(endpoint,code);
     if (code)
     {

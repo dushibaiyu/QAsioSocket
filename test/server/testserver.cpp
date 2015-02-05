@@ -1,4 +1,8 @@
-﻿#include "testserver.h"
+﻿#ifdef _MSC_VER
+#pragma execution_character_set("utf-8")
+#endif
+
+#include "testserver.h"
 #include "qasiotcpsocket.h"
 
 TestServer::TestServer(QObject *parent) : QObject(parent)
@@ -12,7 +16,7 @@ TestServer::~TestServer()
 
 void TestServer::newCon(QAsioTcpSocket * socket)
 {
-    qDebug() << "newCon :" << socket->socketDescriptor();
+    qDebug() << "NewCon! ID:" << socket->socketDescriptor() << "\t\t\t" << QTime::currentTime().toString("HH:mm:ss.zzz");
     socket->setDisconnecdDeleteBuffer(true);
     connect(socket,&QAsioTcpSocket::readReadly,this,&TestServer::readData);
     connect(socket,&QAsioTcpSocket::disconnected,socket,&QAsioTcpSocket::deleteLater);

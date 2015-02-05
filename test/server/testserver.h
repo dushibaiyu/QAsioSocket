@@ -5,6 +5,7 @@
 #include "qasiotcpserver.h"
 #include <QTime>
 #include <QDebug>
+#include <iostream>
 
 class TestServer : public QObject
 {
@@ -17,10 +18,10 @@ signals:
 
 public slots:
     void listen(qint16 port = 2048) {
-        qDebug() << "listen :" <<  server.listen(port);
-        qDebug() << "asio::socket_base::max_connections :" << asio::socket_base::max_connections;
+        std::cout << "Listen  result:" <<  server.listen(port) << std::endl;
+        std::cout << "asio::socket_base::max_connections :" << asio::socket_base::max_connections << std::endl;
         startTime = QTime::currentTime();
-        qDebug() << startTime;
+        qDebug() << "Start Time:" << startTime;
     }
 protected slots:
     void newCon(QAsioTcpSocket * socket);

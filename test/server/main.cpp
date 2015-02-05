@@ -1,4 +1,8 @@
-﻿#include <QCoreApplication>
+﻿#ifdef _MSC_VER
+#pragma execution_character_set("utf-8")
+#endif
+
+#include <QCoreApplication>
 #include <QDebug>
 #include "testserver.h"
 #include <QFile>
@@ -46,11 +50,7 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
     
     TestServer server;
+    std::cout << "Begin Listen,The log >> file. The File Name is Date: yyyy-MM-dd.txt" << std::endl;
     server.listen();
-
-    qDebug() << "Begin";
-
-    int i = a.exec();
-    qDebug() << "end";
-    return i;
+    return a.exec();;
 }

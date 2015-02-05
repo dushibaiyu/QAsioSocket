@@ -43,7 +43,7 @@ public:
     /// IPV6&emsp;&emsp; 只是监听IPv6 <br/>
     /// Both&emsp;&emsp; 同时监听IPv4和IPv6 <br/>
     /// None&emsp;&emsp; 不监听任何端口 <br/>
-    /// TODO:在linux下测试的是IPV4和IPV6都是可以全部监听的
+    /// @warning : 在linux下始终是IPV4和IPV6同时监听的
     enum ListenType{
         IPV4,IPV6,Both,None
     };
