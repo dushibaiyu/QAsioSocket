@@ -2,7 +2,7 @@
 #include <functional>
 
 QAsioTcpServerParent::QAsioTcpServerParent(int threadSize, QObject *parent)
-    : QObject(parent),threadSize_(threadSize),lastState(0)
+    : QObject(parent),threadSize_(threadSize)
 {
     if (threadSize_ <= 0) threadSize_ = 2;
     for (int i = 0; i < threadSize_; ++i)

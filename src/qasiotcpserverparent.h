@@ -9,7 +9,7 @@
 #define QASIOSOCKET_LIBRARY
 #endif
 
-class QAsioTcpServerParent : public QObject
+class QASIOSOCKET_LIBRARY QAsioTcpServerParent : public QObject
 {
     Q_OBJECT
 public:
@@ -79,7 +79,7 @@ protected:
     void appectHandle(const asio::error_code & code);
 
 private:
-    int lastState,threadSize_;
+    int lastState = 0,threadSize_;
     qint16 port_;
     ListenType type_ = None;
     QString ip_;
@@ -87,6 +87,7 @@ private:
     asio::ip::tcp::acceptor * acceptor = nullptr;
     QVector<IOServerThread *> iosserverList;
     asio::ip::tcp::socket * socket_ = nullptr;
+    Q_DISABLE_COPY(QAsioTcpServerParent)
 };
 
 #endif // QASIOTCPSERVERPARENT_H

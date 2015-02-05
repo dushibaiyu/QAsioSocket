@@ -16,10 +16,6 @@
 #include <QQueue>
 #include "qasiotcpsocketparent.h"
 
-#ifndef QASIOSOCKET_LIBRARY
-#define QASIOSOCKET_LIBRARY
-#endif
-
 class QAsioTcpServer;
 
 /// @brief TcpSocket的封装,接口按照QTcpsocket的设计的

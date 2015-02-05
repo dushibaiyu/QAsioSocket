@@ -45,6 +45,9 @@ protected:
 protected:
     //自定义事件的处理，与asio事件循环线程发过来的事件的处理
     void customEvent(QEvent * e);
+
+private:
+    Q_DISABLE_COPY(QAsioTcpServer)
 };
 
 #endif // QASIOTCPSERVER_H

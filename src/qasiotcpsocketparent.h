@@ -7,7 +7,11 @@
 #include <functional>
 #include "ioserverthread.h"
 
-class QAsioTcpSocketParent : public QObject
+#ifndef QASIOSOCKET_LIBRARY
+#define QASIOSOCKET_LIBRARY
+#endif
+
+class QASIOSOCKET_LIBRARY QAsioTcpSocketParent : public QObject
 {
     Q_OBJECT
 public:
