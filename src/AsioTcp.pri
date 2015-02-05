@@ -4,13 +4,17 @@ DEFINES += ASIO_STANDALONE
 SOURCES += \
     $$PWD/qasiotcpsocket.cpp \
     $$PWD/ioserverthread.cpp \
-    $$PWD/qasiotcpserver.cpp
+    $$PWD/qasiotcpserver.cpp \
+    $$PWD/qasiotcpsocketparent.cpp \
+    $$PWD/qasiotcpserverparent.cpp
 
 HEADERS += \
     $$PWD/qasiotcpsocket.h \
     $$PWD/ioserverthread.h \
     $$PWD/qasioevent.h \
-    $$PWD/qasiotcpserver.h
+    $$PWD/qasiotcpserver.h\
+    $$PWD/qasiotcpsocketparent.h \
+    $$PWD/qasiotcpserverparent.h
 
 INCLUDEPATH += $$PWD
 INCLUDEPATH += $$PWD/include_asio
