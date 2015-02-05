@@ -38,10 +38,8 @@ signals:
     void newConnection(QAsioTcpSocket * socket);
 
 protected:
-    virtual void incomingConnection(QAsioTcpSocket *socket);
-
+    void incomingConnection(asio::ip::tcp::socket * socket);
     bool haveErro(const asio::error_code &);
-    void newConnected(asio::ip::tcp::socket * socket);
 protected:
     //自定义事件的处理，与asio事件循环线程发过来的事件的处理
     void customEvent(QEvent * e);

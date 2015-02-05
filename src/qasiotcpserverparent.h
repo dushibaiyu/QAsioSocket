@@ -68,8 +68,9 @@ protected:
 
     /// @brief 新连接的处理函数
     /// @param socket 新的socket链接
-    /// @note 注意，此指针传下去，接着内存管理需要你负责了
-    virtual void newConnected(asio::ip::tcp::socket * socket) = 0;
+    /// @note 注意，此指针传下去，接着内存管理需要你负责了 <br/>
+    /// 此函数在asio的线程中执行，此线程无qt的事件循环的，注意资源保护
+    virtual void incomingConnection(asio::ip::tcp::socket * socket) = 0;
 protected:
     //切换新连接采用asio::io_service，采用公平队列，一次轮询
     inline void goForward(){lastState ++; if (lastState == threadSize_) lastState = 0;}

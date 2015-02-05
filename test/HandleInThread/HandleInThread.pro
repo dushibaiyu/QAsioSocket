@@ -1,6 +1,6 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2014-12-08T16:04:57
+# Project created by QtCreator 2015-02-05T15:02:46
 #
 #-------------------------------------------------
 
@@ -8,15 +8,19 @@ QT       += core
 
 QT       -= gui
 
-TARGET = QAsioTcpServer
+TARGET = HandleInThread
 CONFIG   += console
 CONFIG   -= app_bundle
+
+TEMPLATE = app
 
 win32:!win32-g++:DEFINES += NOMINMAX
 include(../../src/AsioTcp.pri)
 
 SOURCES += main.cpp \
-    testserver.cpp
+    mysocket.cpp \
+    myserver.cpp
 
 HEADERS += \
-    testserver.h
+    mysocket.h \
+    myserver.h

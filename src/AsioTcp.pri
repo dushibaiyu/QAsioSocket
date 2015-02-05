@@ -12,7 +12,7 @@ HEADERS += \
     $$PWD/qasiotcpsocket.h \
     $$PWD/ioserverthread.h \
     $$PWD/qasioevent.h \
-    $$PWD/qasiotcpserver.h\
+    $$PWD/qasiotcpserver.h \
     $$PWD/qasiotcpsocketparent.h \
     $$PWD/qasiotcpserverparent.h
 

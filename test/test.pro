@@ -3,4 +3,6 @@ CONFIG   += ordered
 
 SUBDIRS = \
     server \
-    client
+    client \
+    HandleInThread \
+    threadServer

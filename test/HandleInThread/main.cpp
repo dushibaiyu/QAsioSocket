@@ -1,14 +1,10 @@
-﻿#ifdef _MSC_VER
-#pragma execution_character_set("utf-8")
-#endif
-
-#include <QCoreApplication>
-#include <QDebug>
-#include "threadServer.h"
+﻿#include <QCoreApplication>
+#include "myserver.h"
 #include <QFile>
 #include <QDir>
 #include <QTextStream>
 #include <iostream>
+#include <QTime>
 
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context,const QString & msg)
 {
@@ -44,11 +40,14 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context,cons
 }
 
 
+
 int main(int argc, char *argv[])
 {
     qInstallMessageHandler(customMessageHandler);
     QCoreApplication a(argc, argv);
-    ThreadServer server(2);
+
+    MyServer server(2);
     std::cout << "Listen :" << server.listen(2048) << std::endl;
-    return a.exec();;
+
+    return a.exec();
 }

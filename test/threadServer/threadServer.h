@@ -5,6 +5,9 @@
 #include <QTime>
 #include <QDebug>
 #include <iostream>
+#include "threadhandle.h"
+
+class MySocket;
 
 class ThreadServer : public QAsioTcpServer
 {
@@ -13,9 +16,14 @@ public:
     explicit ThreadServer(int threadsize = 2,int asioThread = -1 ,QObject *parent = 0);
     ~ThreadServer();
 
-protected:
-    void incomingConnection(QAsioTcpSocket *socket);
+public slots:
+    void removeThread(MySocket * );
 
+protected:
+    void incomingConnection(asio::ip::tcp::socket *socket);
+
+private:
+    ThreadHandle handler;
 };
 
 #endif // TESTSERVER_H

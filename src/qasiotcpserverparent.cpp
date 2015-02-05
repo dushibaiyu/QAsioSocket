@@ -122,7 +122,7 @@ bool QAsioTcpServerParent::listen(const QString &ip, qint16 port)
 void QAsioTcpServerParent::appectHandle(const asio::error_code &code)
 {
     if (!code) {
-        newConnected(socket_);
+        incomingConnection(socket_);
     } else {
         error_ = code;
         if (haveErro(code)){

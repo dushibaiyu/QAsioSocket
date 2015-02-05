@@ -4,31 +4,34 @@
 
 #include "threadserver.h"
 #include "qasiotcpsocket.h"
+#include "mysocket.h"
+#include <QThread>
+#include <QDebug>
+
 
 ThreadServer::ThreadServer(int threadsize,int asioThread ,QObject *parent)
     : QAsioTcpServer(asioThread,parent)
 {
-    connect(&server,&QAsioTcpServer::newConnection,this,&TestServer::newCon);
+    qDebug() << "Main Thread Id :" << QThread::currentThreadId();
+    handler.initThreadType(ThreadHandle::THREADSIZE,threadsize);
 }
 
 ThreadServer::~ThreadServer()
 {
 }
 
-void ThreadServer::newCon(QAsioTcpSocket * socket)
+
+void ThreadServer::incomingConnection(asio::ip::tcp::socket *socket)
 {
-    qDebug() << "NewCon! ID:" << socket->socketDescriptor() << "\t\t\t" << QTime::currentTime().toString("HH:mm:ss.zzz");
-    socket->setDisconnecdDeleteBuffer(true);
-    connect(socket,&QAsioTcpSocket::readReadly,this,&TestServer::readData);
-    connect(socket,&QAsioTcpSocket::disconnected,socket,&QAsioTcpSocket::deleteLater);
+    MySocket * soc = new MySocket(socket);
+    soc->moveToThread(handler.getThread());
+    QObject::connect(soc,&MySocket::sentDiscon,this,&ThreadServer::removeThread);
+    qDebug() << "New Connect Id:" << soc->socketDescriptor() << "\t\t"
+             << "in Thread :" << QThread::currentThreadId();
 }
 
-void ThreadServer::readData()
+void ThreadServer::removeThread(MySocket * socket)
 {
-    auto socket = qobject_cast<QAsioTcpSocket *>(sender());
-    if (!socket) return;
-    QByteArray data = socket->readAll();
-    socket->write(data);
-    qDebug() << startTime.toString("HH:mm:ss.zzz") << "\t\t\t"
-           << QTime::currentTime().toString("HH:mm:ss.zzz") << "\t" <<socket->socketDescriptor();
+    handler.removeThread(socket->thread());
+    socket->deleteLater();
 }

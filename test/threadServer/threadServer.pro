@@ -12,13 +12,16 @@ TARGET = QAsioTcpServer
 CONFIG   += console
 CONFIG   -= app_bundle
 
+include(../../src/AsioTcp.pri)
+
 SOURCES += main.cpp \
     threadServer.cpp \
-    qasiotcpsocketparent.cpp
+    threadhandle.cpp \
+    mysocket.cpp
 
 HEADERS += \
     threadServer.h \
-    qasiotcpsocketparent.h
+    threadhandle.h \
+    mysocket.h
 
 win32:!win32-g++:DEFINES += NOMINMAX
-include(../../src/AsioTcp.pri)

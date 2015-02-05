@@ -40,7 +40,8 @@ void QAsioTcpServer::customEvent(QEvent *e)
         QAsioNewEvent * newcon = static_cast<QAsioNewEvent *>(e);
         QAsioTcpSocket * socket = newcon->getNewSocket();
         if (socket->state() == QAsioTcpSocket::ConnectedState) {
-            incomingConnection(socket);
+            socket->setDisconnecdDeleteBuffer(true);
+            emit newConnection(socket);;
         } else {
             delete socket;
         }
@@ -50,20 +51,14 @@ void QAsioTcpServer::customEvent(QEvent *e)
     }
 }
 
-void QAsioTcpServer::incomingConnection(QAsioTcpSocket * socket)
+void QAsioTcpServer::incomingConnection(asio::ip::tcp::socket *socket)
 {
-    socket->setDisconnecdDeleteBuffer(true);
-    emit newConnection(socket);
+    QAsioTcpSocket * asiosocket = new QAsioTcpSocket(socket);
+    asiosocket->moveToThread(this->thread());
+    QCoreApplication::postEvent(this,new QAsioNewEvent(asiosocket),Qt::HighEventPriority);
 }
 
 bool QAsioTcpServer::haveErro(const asio::error_code & /*code*/)
 {
     return true;
-}
-
-void QAsioTcpServer::newConnected(asio::ip::tcp::socket * socket)
-{
-    QAsioTcpSocket * asiosocket = new QAsioTcpSocket(socket);
-    asiosocket->moveToThread(this->thread());
-    QCoreApplication::postEvent(this,new QAsioNewEvent(asiosocket),Qt::HighEventPriority);
 }
