@@ -25,7 +25,7 @@ public:
     /// @param threadSize服务端开启的asio::io_service的数目
     /// @note 当threadSize<=0 时，默认是开启两个
     /// @param parent父对象指针，Qt父子关系对象的父对象
-    explicit QAsioTcpServer(int threadSize = -1,QObject *parent = 0);
+    explicit QAsioTcpServer(int threadSize = -1,int readSize = 4096,QObject *parent = 0);
 
     /// @brief 析构函数
     virtual ~QAsioTcpServer();
@@ -45,6 +45,7 @@ protected:
     void customEvent(QEvent * e);
 
 private:
+    int byteSize;
     Q_DISABLE_COPY(QAsioTcpServer)
 };
 

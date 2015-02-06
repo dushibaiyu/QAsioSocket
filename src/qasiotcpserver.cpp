@@ -26,8 +26,8 @@ private:
 
 const QEvent::Type QAsioNewEvent::QAsioNewEventType = (QEvent::Type)QEvent::registerEventType();
 
-QAsioTcpServer::QAsioTcpServer(int threadSize, QObject *parent) :
-    QAsioTcpServerParent(threadSize,parent)
+QAsioTcpServer::QAsioTcpServer(int threadSize, int readSize, QObject *parent) :
+    QAsioTcpServerParent(threadSize,parent),byteSize(readSize)
 {}
 
 QAsioTcpServer::~QAsioTcpServer()
@@ -53,7 +53,7 @@ void QAsioTcpServer::customEvent(QEvent *e)
 
 void QAsioTcpServer::incomingConnection(asio::ip::tcp::socket *socket)
 {
-    QAsioTcpSocket * asiosocket = new QAsioTcpSocket(socket);
+    QAsioTcpSocket * asiosocket = new QAsioTcpSocket(socket,byteSize);
     asiosocket->moveToThread(this->thread());
     QCoreApplication::postEvent(this,new QAsioNewEvent(asiosocket),Qt::HighEventPriority);
 }

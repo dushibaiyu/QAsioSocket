@@ -6,12 +6,12 @@
 #include <QCoreApplication>
 #include <QDebug>
 
-QAsioTcpSocket::QAsioTcpSocket(QObject *parent) :
-    QAsioTcpSocketParent(parent)
+QAsioTcpSocket::QAsioTcpSocket(int bytesize, QObject *parent) :
+    QAsioTcpSocketParent(bytesize,parent)
 {}
 
-QAsioTcpSocket::QAsioTcpSocket(asio::ip::tcp::socket * socket, QObject *parent) :
-    QAsioTcpSocketParent(socket,parent)
+QAsioTcpSocket::QAsioTcpSocket(asio::ip::tcp::socket * socket, int bytesize, QObject *parent) :
+    QAsioTcpSocketParent(socket,bytesize,parent)
 {}
 
 QAsioTcpSocket::~QAsioTcpSocket()
@@ -59,6 +59,9 @@ void QAsioTcpSocket::customEvent(QEvent *event)
         case QAsioEvent::HostFined :
             emit hostFound();
             break;
+        case QAsioEvent::HeartTimeOut:
+            emit heartTimeOuted(e->getData().toInt());
+            break;
         default:
             break;
         }
@@ -85,7 +88,8 @@ void QAsioTcpSocket::haveErro()
     }
     if (isDisconDelData) {
         bufferMutex.lock();
-        buffer.close();
+        if (buffer.isOpen())
+            buffer.close();
         bufferMutex.unlock();
     }
 }
@@ -98,7 +102,7 @@ void QAsioTcpSocket::hostConnected()
 void QAsioTcpSocket::readDataed(const char * data,std::size_t bytes_transferred)
 {
     bufferMutex.lock();
-    if (buffer.atEnd())
+    if (buffer.isOpen() && buffer.atEnd())
         buffer.close();
     if (!buffer.isOpen())
         buffer.open(QBuffer::ReadWrite|QBuffer::Truncate);
@@ -129,5 +133,12 @@ bool QAsioTcpSocket::writeDataed(std::size_t bytes_transferred)
 void QAsioTcpSocket::finedHosted()
 {
     QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::HostFined));
+}
+
+void QAsioTcpSocket::heartTimeOut(int timeout)
+{
+    auto e = new QAsioEvent(QAsioEvent::HeartTimeOut);
+    e->setData(timeout);
+    QCoreApplication::postEvent(this,e);
 }
 

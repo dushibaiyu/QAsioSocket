@@ -8,11 +8,12 @@ QT       += core
 
 QT       -= gui
 
-TARGET = QAsioTcpServer
+TARGET = ThreadServer
 CONFIG   += console
 CONFIG   -= app_bundle
 
-include(../../src/AsioTcp.pri)
+INCLUDEPATH += D:/boost_1_57_0
+DEFINES += ASIO_HAS_BOOST_DATE_TIME BOOST_ALL_NO_LIB
 
 SOURCES += main.cpp \
     threadServer.cpp \
@@ -25,3 +26,4 @@ HEADERS += \
     mysocket.h
 
 win32:!win32-g++:DEFINES += NOMINMAX
+include(../../src/AsioTcp.pri)

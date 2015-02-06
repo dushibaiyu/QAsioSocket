@@ -11,6 +11,7 @@
 #define QASIOEVENT_H
 
 #include <QEvent>
+#include <QVariant>
 #include "qasiotcpsocket.h"
 
 /// @brief Socket用来线程间通讯的事件类
@@ -23,7 +24,8 @@ public:
         DisConnect,//断开链接
         HaveEorro,//发现错误错误
         ReadReadly, //数据可供读取
-        HostFined //找到主机
+        HostFined, //找到主机
+        HeartTimeOut //心跳时间到了，但是没有数据
     };
 
     /// @brief 默认构造函数
@@ -38,12 +40,15 @@ public:
     /// @brief 设置事件代表的状态
     /// @param ctype 事件代表的状态
     void setSocketState(ConnectedEvent ctype){cType_ = ctype;}
+    void setData(const QVariant & data) {data_ = data;}
 
     /// @brief 获取事件代表的状态
     ConnectedEvent getConnectedType() const {return cType_;}
 
+    QVariant getData() const {return data_;}
 private:
     ConnectedEvent cType_;
+    QVariant data_;
 public:
     /// @brief 事件的类型
     static const QEvent::Type QAsioSocketEventType;

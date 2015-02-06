@@ -25,7 +25,7 @@ class QASIOSOCKET_LIBRARY QAsioTcpSocket : public QAsioTcpSocketParent
 public:
 
     /// @brief 构造函数
-    explicit QAsioTcpSocket(QObject *parent = 0);
+    explicit QAsioTcpSocket(int bytesize = 4096,QObject *parent = 0);
 
     /// @brief 析构
     virtual ~QAsioTcpSocket();
@@ -48,6 +48,8 @@ signals:
 
     /// @brief Signal 信号：解析主机成功的信号
     void hostFound();
+
+    void heartTimeOuted(int i);
 
 public slots:
     /// @brief 发送数据到服务器
@@ -83,7 +85,13 @@ public:
     }
 
     /// @brief 是否读取到最后了
-    bool atEnd() const{return buffer.atEnd();}
+    bool atEnd() {
+        QMutexLocker mutexLocker(&bufferMutex);
+        if (buffer.isOpen())
+            return buffer.atEnd();
+        else
+            return true;
+    }
 
     /// @brief 设置是不是断开链接就立刻清除用户缓存，并停止发送数据就绪信号
     /// @note 默认是false，不清除和停止信号的。<br/>
@@ -94,7 +102,7 @@ public:
 
 protected:
     /// @brief 直接赋给asio::ip::tcp::socket的构造函数，为保护，只支持QAsioTcpServer调用
-    QAsioTcpSocket(asio::ip::tcp::socket * socket , QObject *parent = 0);//server类才能访问
+    QAsioTcpSocket(asio::ip::tcp::socket * socket ,int bytesize = 4096, QObject *parent = 0);//server类才能访问
 
     friend class QAsioTcpServer;
 protected:
@@ -103,6 +111,7 @@ protected:
     virtual void readDataed(const char * data,std::size_t bytes_transferred);
     virtual bool writeDataed(std::size_t bytes_transferred);
     virtual void finedHosted();
+    virtual void heartTimeOut(int timeout);
     // 处理自定义事件，就是asio事件循环发送过来的事件
     virtual void customEvent(QEvent * event);
 

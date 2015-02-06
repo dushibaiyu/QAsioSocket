@@ -17,7 +17,7 @@ public:
     ~ThreadServer();
 
 public slots:
-    void removeThread(MySocket * );
+    void removeThread(QThread * );
 
 protected:
     void incomingConnection(asio::ip::tcp::socket *socket);

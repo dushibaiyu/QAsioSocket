@@ -8,7 +8,7 @@ class MyServer : public QAsioTcpServerParent
 {
     Q_OBJECT
 public:
-    explicit MyServer(int thsize,QObject *parent = 0);
+    explicit MyServer(int thsize,int buffersize = 4096,QObject *parent = 0);
     ~MyServer();
 
 signals:
@@ -21,6 +21,7 @@ protected:
 
 private:
     QObjectCleanupHandler handler;
+    int bsize;
     Q_DISABLE_COPY(MyServer)
 };
 

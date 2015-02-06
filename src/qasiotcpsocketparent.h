@@ -7,6 +7,8 @@
 #include <functional>
 #include "ioserverthread.h"
 
+
+
 #ifndef QASIOSOCKET_LIBRARY
 #define QASIOSOCKET_LIBRARY
 #endif
@@ -15,8 +17,8 @@ class QASIOSOCKET_LIBRARY QAsioTcpSocketParent : public QObject
 {
     Q_OBJECT
 public:
-    explicit QAsioTcpSocketParent(QObject *parent = 0);
-    QAsioTcpSocketParent(asio::ip::tcp::socket * socket , QObject *parent = 0);
+    explicit QAsioTcpSocketParent(int byteSize = 4096,QObject *parent = 0);
+    QAsioTcpSocketParent(asio::ip::tcp::socket * socket ,int byteSize = 4096, QObject *parent = 0);
     virtual ~QAsioTcpSocketParent();
 
     /// @brief socket的当前链接状态
@@ -87,12 +89,26 @@ public:
 
     SocketErroSite erroSite() const {return this->erro_site;}
 
+#ifdef ASIO_HAS_BOOST_DATE_TIME
+    void setHeartTimeOut(int s) {
+        if (s <= 30) return;
+        if (timer != nullptr) {
+            timer->cancel();
+            delete timer;
+            timer = nullptr;
+        }
+        timeOut_s = s;
+        timer = new asio::deadline_timer(socket_->get_io_service(),boost::posix_time::seconds(timeOut_s));
+    }
+    int getHeartTimeOut() const {return timeOut_s;}
+#endif
 protected:
     virtual void haveErro() = 0;
     virtual void hostConnected() = 0;
     virtual void readDataed(const char * data,std::size_t bytes_transferred) = 0;
     virtual bool writeDataed(std::size_t bytes_transferred) = 0;
     virtual void finedHosted() = 0;
+    virtual void heartTimeOut(int timeout){timeout;}
 protected:
     // 数据读取的回调函数
     void readHandler(const asio::error_code& error, std::size_t bytes_transferred);
@@ -102,6 +118,15 @@ protected:
     void connectedHandler(const asio::error_code& error, asio::ip::tcp::resolver::iterator iterator);
     // 解析主机后的回调函数
     void resolverHandle(const asio::error_code & error, asio::ip::tcp::resolver::iterator iterator);
+
+#ifdef ASIO_HAS_BOOST_DATE_TIME
+    void heartTimeOutHandler(const asio::error_code& error) {
+        if (!error) {
+            heartTimeOut(timeOut_s);
+        }
+        timer->async_wait(std::bind(&QAsioTcpSocketParent::heartTimeOutHandler,this,std::placeholders::_1));
+    }
+#endif
 
 protected:
     asio::error_code erro_code;
@@ -115,8 +140,13 @@ private:
     asio::ip::tcp::socket * socket_ = nullptr;
     asio::ip::tcp::endpoint peerPoint;
     asio::ip::tcp::resolver * resolver_ = nullptr;
+#ifdef ASIO_HAS_BOOST_DATE_TIME
+    asio::deadline_timer * timer = nullptr;
+    int timeOut_s = 0;
+#endif
+    int byteSize_;
     //接受数据的缓存
-    std::array<char,4096> data_;
+    char * data_ = nullptr;
     Q_DISABLE_COPY(QAsioTcpSocketParent)
 };
 

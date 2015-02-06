@@ -13,12 +13,12 @@ public:
     ~MySocket();
 
 signals:
-    void sentDiscon(MySocket *);
+    void sentDiscon(QThread *);
 public slots:
     void HandleData();
     void HandleDisCon();
 protected:
-    explicit MySocket(asio::ip::tcp::socket * socket,QObject *parent = 0);
+    explicit MySocket(asio::ip::tcp::socket * socket, int size = 4096, QObject *parent = 0);
     friend class ThreadServer;
     Q_DISABLE_COPY(MySocket)
 };

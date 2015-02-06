@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 {
     qInstallMessageHandler(customMessageHandler);
     QCoreApplication a(argc, argv);
-    ThreadServer server(2);
+    ThreadServer server(2,1);
     std::cout << "Listen :" << server.listen(2048) << std::endl;
     return a.exec();;
 }

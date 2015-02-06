@@ -10,7 +10,7 @@
 
 
 ThreadServer::ThreadServer(int threadsize,int asioThread ,QObject *parent)
-    : QAsioTcpServer(asioThread,parent)
+    : QAsioTcpServer(threadsize,asioThread,parent)
 {
     qDebug() << "Main Thread Id :" << QThread::currentThreadId();
     handler.initThreadType(ThreadHandle::THREADSIZE,threadsize);
@@ -30,8 +30,7 @@ void ThreadServer::incomingConnection(asio::ip::tcp::socket *socket)
              << "in Thread :" << QThread::currentThreadId();
 }
 
-void ThreadServer::removeThread(MySocket * socket)
+void ThreadServer::removeThread(QThread * thread)
 {
-    handler.removeThread(socket->thread());
-    socket->deleteLater();
+    handler.removeThread(thread);
 }
