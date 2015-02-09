@@ -4,7 +4,7 @@
 
 #include "mysocket.h"
 #include <QDebug>
-//#include <QTime>
+#include <QTime>
 #include <QFile>
 
 MySocket::MySocket(int size, QObject *parent) : QAsioTcpSocketParent(size,parent)
@@ -13,14 +13,6 @@ MySocket::MySocket(int size, QObject *parent) : QAsioTcpSocketParent(size,parent
 MySocket::MySocket(asio::ip::tcp::socket * socket , int size, QObject *parent)
     : QAsioTcpSocketParent(socket,size,parent)
 {
-    QFile file(":/data");
-    bool it = file.open(QFile::ReadOnly);
-    qDebug() << it;
-    QByteArray data = file.readAll();
-    writeQueue.append(data);
-    int i = writeQueue.size();
-    qDebug() << i;
-    file.close();
 }
 
 MySocket::~MySocket()
@@ -36,7 +28,9 @@ void MySocket::haveErro()
 
 void MySocket::hostConnected()
 {
-    write(QByteArray());
+    QByteArray data(4096,'a');
+//    qDebug() << data;
+    write(data);
 }
 
 void MySocket::readDataed(const char * data,std::size_t bytes_transferred)
@@ -45,9 +39,6 @@ void MySocket::readDataed(const char * data,std::size_t bytes_transferred)
     readSize += bytes_transferred;
     readCount ++;
     write(by);
-//    qDebug() << "Thread ID:" << QThread::currentThreadId() << "\t\t"
-//           << QTime::currentTime().toString("HH:mm:ss.zzz")
-//           << "\t" << socketDescriptor() << "\t";
 }
 
 bool MySocket::writeDataed(std::size_t bytes_transferred)

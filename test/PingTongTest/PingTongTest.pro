@@ -1,6 +1,6 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2015-02-06T11:30:28
+# Project created by QtCreator 2015-02-09T11:34:21
 #
 #-------------------------------------------------
 
@@ -11,8 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = PingTongTest
 TEMPLATE = app
 
-win32:!win32-g++:DEFINES += NOMINMAX
-include(../../src/AsioTcp.pri)
+CONFIG -= console
 
 SOURCES += main.cpp\
     mysocket.cpp \
@@ -24,8 +23,8 @@ HEADERS  += \
     sockets.h \
     form.h
 
-RESOURCES += \
-    data.qrc
-
 FORMS += \
     form.ui
+
+win32:!win32-g++:DEFINES += NOMINMAX
+include(../../src/AsioTcp.pri)

@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file alias="data">data</file>
-    </qresource>
-</RCC>

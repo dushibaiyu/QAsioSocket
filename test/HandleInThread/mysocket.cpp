@@ -32,7 +32,7 @@ void MySocket::readDataed(const char * data,std::size_t bytes_transferred)
     write(by);
     qDebug() << "Thread ID:" << QThread::currentThreadId() << "\t\t"
            << QTime::currentTime().toString("HH:mm:ss.zzz")
-           << "\t" << socketDescriptor() << "\t" << by;
+           << "\t" << socketDescriptor();// << "\t" << by;
 }
 
 bool MySocket::writeDataed(std::size_t bytes_transferred)

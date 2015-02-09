@@ -8,7 +8,6 @@
 
 int main(int argc, char *argv[])
 {
-//    qInstallMessageHandler(customMessageHandler);
     QApplication a(argc, argv);
     Form fm;
     fm.show();

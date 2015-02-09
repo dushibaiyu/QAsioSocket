@@ -146,6 +146,7 @@ private:
 #endif
     int byteSize_;
     //接受数据的缓存
+//    std::array<char,4096> data_;
     char * data_ = nullptr;
     Q_DISABLE_COPY(QAsioTcpSocketParent)
 };

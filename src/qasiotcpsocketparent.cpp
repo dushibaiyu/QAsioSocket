@@ -1,23 +1,39 @@
 ﻿#include "qasiotcpsocketparent.h"
 #include <functional>
+#include <QDebug>
 
 QAsioTcpSocketParent::QAsioTcpSocketParent(int byteSize, QObject *parent) :
     QObject(parent),byteSize_(byteSize)
 {
-    data_ = new char[byteSize];
-    socket_ = new asio::ip::tcp::socket(IOServerThread::getIOThread()->getIOServer());
+    try {
+        data_ = new char[byteSize];
+        socket_ = new asio::ip::tcp::socket(IOServerThread::getIOThread()->getIOServer());
+    } catch (std::bad_alloc & /*bad*/) {
+        data_ = nullptr;
+        qWarning() << "new Bad the new size is " << byteSize;
+//        throw bad;
+    }
 }
 
 QAsioTcpSocketParent::QAsioTcpSocketParent(asio::ip::tcp::socket *socket,int byteSize, QObject *parent) :
     QObject(parent),socket_(socket),byteSize_(byteSize)
 {
-    //    asio::async_read(*socket_,asio::buffer(data_,byteSize_),
+    //    asio::async_read(*socket_,asio::buffer(data_,/*data_.max_size()*/byteSize_),
     //                     std::bind(&QAsioTcpSocket::readHandler,this,std::placeholders::_1,std::placeholders::_2));
-    data_ = new char[byteSize];
-    if (socket_->is_open()) {
-        socket_->async_read_some(asio::buffer(data_,byteSize_),
-                                 std::bind(&QAsioTcpSocketParent::readHandler,this,std::placeholders::_1,std::placeholders::_2));
-        state_ = ConnectedState;
+    try {
+        data_ = new char[byteSize];
+        if (socket_->is_open()) {
+            socket_->async_read_some(asio::buffer(data_,/*data_.max_size()*/byteSize_),
+                                     std::bind(&QAsioTcpSocketParent::readHandler,this,std::placeholders::_1,std::placeholders::_2));
+            state_ = ConnectedState;
+        }
+    } catch (std::bad_alloc & /*bad*/) {
+        if (socket_->is_open()) {
+            socket_->close(erro_code);
+        }
+        data_ = nullptr;
+        qWarning() << "new Bad the new size is " << byteSize;
+//        throw bad;
     }
 }
 
@@ -27,10 +43,11 @@ QAsioTcpSocketParent::~QAsioTcpSocketParent()
         delete resolver_;
     if (socket_ != nullptr) {
         if (socket_->is_open())
-            socket_->close();
+            socket_->close(erro_code);
         delete socket_;
     }
-    delete data_;
+    if (data_ != nullptr)
+        delete[] data_;
 }
 
 void QAsioTcpSocketParent::readHandler(const asio::error_code &error, std::size_t bytes_transferred)
@@ -39,7 +56,8 @@ void QAsioTcpSocketParent::readHandler(const asio::error_code &error, std::size_
         if (bytes_transferred == 0){
             state_ = UnconnectedState;
             erro_site = NoError;
-            socket_->close(erro_code);
+            if (socket_->is_open())
+                socket_->close(erro_code);
             erro_code = error;
 #ifdef ASIO_HAS_BOOST_DATE_TIME
             if (timer != nullptr)
@@ -48,6 +66,7 @@ void QAsioTcpSocketParent::readHandler(const asio::error_code &error, std::size_
             haveErro();
             return;
         }
+//        readDataed(data_.data(),bytes_transferred);
         readDataed(data_,bytes_transferred);
 #ifdef ASIO_HAS_BOOST_DATE_TIME
         if (timer != nullptr) {
@@ -55,13 +74,15 @@ void QAsioTcpSocketParent::readHandler(const asio::error_code &error, std::size_
             timer->async_wait(std::bind(&QAsioTcpSocketParent::heartTimeOutHandler,this,std::placeholders::_1));
         }
 #endif
-        socket_->async_read_some(asio::buffer(data_,byteSize_),
+        socket_->async_read_some(asio::buffer(data_,/*data_.max_size()*/byteSize_),
                                  std::bind(&QAsioTcpSocketParent::readHandler,this,std::placeholders::_1,std::placeholders::_2));
 
     } else {
         state_ = UnconnectedState;
         erro_site = ReadError;
-        socket_->close(erro_code);
+        if (socket_->is_open()) {
+            socket_->close(erro_code);
+        }
         erro_code = error;
 #ifdef ASIO_HAS_BOOST_DATE_TIME
         if (timer != nullptr)
@@ -78,7 +99,9 @@ void QAsioTcpSocketParent::writeHandler(const asio::error_code &error, std::size
     }
     state_ = UnconnectedState;
     erro_site = WriteEorro;
-    socket_->close(erro_code);
+    if (socket_->is_open()) {
+        socket_->close(erro_code);
+    }
     erro_code = error;
 #ifdef ASIO_HAS_BOOST_DATE_TIME
     if (timer != nullptr)
@@ -93,9 +116,13 @@ void QAsioTcpSocketParent::resolverHandle(const asio::error_code &error,asio::ip
         if (socket_ == nullptr) {
             socket_ = new asio::ip::tcp::socket(IOServerThread::getIOThread()->getIOServer());
         }
-        asio::async_connect(*socket_,iterator,
-                            std::bind(&QAsioTcpSocketParent::connectedHandler,this,std::placeholders::_1,std::placeholders::_2));
-        finedHosted();
+        if (data_ != nullptr) {
+            asio::async_connect(*socket_,iterator,
+                                std::bind(&QAsioTcpSocketParent::connectedHandler,this,std::placeholders::_1,std::placeholders::_2));
+            finedHosted();
+        } else {
+            state_ = UnconnectedState;
+        }
     } else {
         state_ = UnconnectedState;
         erro_site = FindHostError;
@@ -133,7 +160,7 @@ void QAsioTcpSocketParent::connectedHandler(const asio::error_code &error,asio::
     if (!error) {
         state_ = ConnectedState;
         erro_site = NoError;
-        socket_->async_read_some(asio::buffer(data_,byteSize_),
+        socket_->async_read_some(asio::buffer(data_,/*data_.max_size()*/byteSize_),
                                  std::bind(&QAsioTcpSocketParent::readHandler,this,std::placeholders::_1,std::placeholders::_2));
         this->peerPoint = socket_->remote_endpoint(erro_code);
         hostConnected();
@@ -147,7 +174,9 @@ void QAsioTcpSocketParent::connectedHandler(const asio::error_code &error,asio::
         {
             state_ = UnconnectedState;
             erro_site = ConnectEorro;
-            socket_->close(erro_code);
+            if (socket_->is_open()) {
+                socket_->close(erro_code);
+            }
             erro_code = error;
 #ifdef ASIO_HAS_BOOST_DATE_TIME
             if (timer != nullptr)

@@ -12,7 +12,7 @@ public:
     explicit sockets(QObject *parent = 0);
     ~sockets();
 
-    void Creator(int size, int buffer = 16384);
+    void Creator(int size, int buffer = 16385);
 
 signals:
     void sentData(int site ,int revCou, int sentCou,qint64 revSize,qint64 sentSize);
