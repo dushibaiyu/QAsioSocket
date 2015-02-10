@@ -118,6 +118,10 @@ void QAsioTcpSocket::readDataed(const char * data,std::size_t bytes_transferred)
 bool QAsioTcpSocket::writeDataed(std::size_t bytes_transferred)
 {
     writeMutex.lock();
+    if (writeQueue.isEmpty()) {
+        writeMutex.unlock();
+        return false;
+    }
     if (static_cast<std::size_t>(writeQueue.head().size()) == bytes_transferred){
         writeQueue.dequeue();
         writeMutex.unlock();
