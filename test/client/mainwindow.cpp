@@ -1,4 +1,8 @@
-﻿#include "mainwindow.h"
+﻿#ifdef _MSC_VER
+#pragma execution_character_set("utf-8")
+#endif
+
+#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -6,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    socket = new QAsioTcpSocket(this);
+    socket = new QAsioTcpSocket(4096,this);
     ui->pushSent->setEnabled(false);
     this->ui->timeBut->setEnabled(false);
     connect(socket,&QAsioTcpSocket::readReadly,[&](){
@@ -37,10 +41,10 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->pushSent->setEnabled(false);
         this->ui->txtIp->setEnabled(true);
         this->ui->txtPort->setEnabled(true);
-        tm.stop();
         this->ui->timeBut->setEnabled(false);
         this->ui->lineEdit->setEnabled(true);
         this->ui->timeBut->setText("启动定时");
+        this->tm.stop();
     });
     list << "我是谁?" << "渡世白玉" << "hello" << "哈哈哈哈哈" << "你是坏蛋!" <<  "测试一下下了" << "不知道写什么" ;
     QTime time;
@@ -90,10 +94,10 @@ void MainWindow::on_pushSent_clicked()
     ui->textEdit->append(tr("Say：%1").arg(data));
 }
 
-void MainWindow::readError(const QString & site,const asio::error_code & erro_code)
+void MainWindow::readError(QAsioTcpSocket::SocketErroSite & site,const asio::error_code & erro_code)
 {
     ui->pushConnect->setText("连接");
-    ui->textEdit->append(tr("连接出错：%1 : %2").arg(site).arg(erro_code.value()));
+    ui->textEdit->append(tr("连接出错：%1 : %2").arg(static_cast<int>(site)).arg(erro_code.value()));
     ui->pushSent->setEnabled(false);
     ui->pushConnect->setEnabled(true);
     this->ui->txtIp->setEnabled(true);
