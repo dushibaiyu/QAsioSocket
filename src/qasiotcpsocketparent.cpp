@@ -94,7 +94,7 @@ void QAsioTcpSocketParent::readHandler(const asio::error_code &error, std::size_
 
 void QAsioTcpSocketParent::writeHandler(const asio::error_code &error, std::size_t bytes_transferred)
 {
-    if (!error){
+    if (!error && state_ == ConnectedState){
         if (writeDataed(bytes_transferred)) return;
     }
     state_ = UnconnectedState;

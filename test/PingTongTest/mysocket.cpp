@@ -48,7 +48,7 @@ bool MySocket::writeDataed(std::size_t bytes_transferred)
         writeSize += bytes_transferred;
         writeQueue.dequeue();
         if (!writeQueue.isEmpty())
-            write(QByteArray());
+            wirteData(writeQueue.head().data(),static_cast<std::size_t>(writeQueue.head().size()));
         return true;
     } else {
         return false;
@@ -69,6 +69,8 @@ bool MySocket::write(const QByteArray &data)
     if (writeQueue.isEmpty()) {
         return false;
     }
-    wirteData(writeQueue.head().data(),static_cast<std::size_t>(writeQueue.head().size()));
+    if (writeQueue.size() == 1) {
+        wirteData(writeQueue.head().data(),static_cast<std::size_t>(writeQueue.head().size()));
+    }
     return true;
 }

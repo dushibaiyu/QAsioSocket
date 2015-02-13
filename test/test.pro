@@ -5,4 +5,5 @@ SUBDIRS = \
     server \
     client \
     HandleInThread \
-    threadServer
+    threadServer \
+    PingTongTest

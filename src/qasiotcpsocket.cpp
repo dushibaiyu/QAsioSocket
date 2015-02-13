@@ -28,7 +28,9 @@ bool QAsioTcpSocket::write(const QByteArray &data)
         writeMutex.unlock();
         return false;
     }
-    wirteData(writeQueue.head().data(),static_cast<std::size_t>(writeQueue.head().size()));
+    if (writeQueue.size() == 1) {
+        wirteData(writeQueue.head().data(),static_cast<std::size_t>(writeQueue.head().size()));
+    }
     writeMutex.unlock();
     return true;
 }
@@ -118,15 +120,12 @@ void QAsioTcpSocket::readDataed(const char * data,std::size_t bytes_transferred)
 bool QAsioTcpSocket::writeDataed(std::size_t bytes_transferred)
 {
     writeMutex.lock();
-    if (writeQueue.isEmpty()) {
-        writeMutex.unlock();
-        return false;
-    }
     if (static_cast<std::size_t>(writeQueue.head().size()) == bytes_transferred){
         writeQueue.dequeue();
+        if (!writeQueue.isEmpty()) {
+            wirteData(writeQueue.head().data(),static_cast<std::size_t>(writeQueue.head().size()));
+        }
         writeMutex.unlock();
-        if (!writeQueue.isEmpty())
-            write(QByteArray());
         return true;
     } else {
         writeMutex.unlock();
