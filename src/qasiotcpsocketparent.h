@@ -108,7 +108,7 @@ protected:
     virtual void readDataed(const char * data,std::size_t bytes_transferred) = 0;
     virtual bool writeDataed(std::size_t bytes_transferred) = 0;
     virtual void finedHosted() = 0;
-    virtual void heartTimeOut(int timeout){timeout;}
+    virtual void heartTimeOut(int /*timeout*/){}
 protected:
     // 数据读取的回调函数
     void readHandler(const asio::error_code& error, std::size_t bytes_transferred);

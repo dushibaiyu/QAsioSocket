@@ -57,7 +57,7 @@ bool MySocket::write(const QByteArray &data)
     if (state() != ConnectedState)
         return false;
     if (!data.isEmpty())
-        data.append(data);
+        writeQueue.append(data);
     if (writeQueue.isEmpty()) {
         return false;
     }
