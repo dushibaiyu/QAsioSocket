@@ -18,7 +18,7 @@ signals:
 
 public slots:
     void listen(qint16 port = 2048) {
-        std::cout << "Listen  result:" <<  server.listen(port) << std::endl;
+        std::cout << "Listen  result:" <<  server.listen(port,QAsioTcpServer::IPV4) << std::endl;
         std::cout << "asio::socket_base::max_connections :" << asio::socket_base::max_connections << std::endl;
         startTime = QTime::currentTime();
         qDebug() << "Start Time:" << startTime;
