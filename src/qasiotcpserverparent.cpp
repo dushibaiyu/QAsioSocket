@@ -1,96 +1,181 @@
-﻿#include "qasiotcpserverparent.h"
-#include <functional>
+﻿#ifdef _MSC_VER
+#pragma execution_character_set("utf-8")
+#endif
 
-QAsioTcpServerParent::QAsioTcpServerParent(int threadSize, QObject *parent)
-    : QObject(parent),threadSize_(threadSize)
+#include "ioserverthread.h"
+#include "qasiotcpserverparent.h"
+#include "qasiotcpsocketparent.h"
+#include <boost/bind/bind.hpp>
+#include <vector>
+
+class QAsioTcpServerParentPrivate
 {
-    if (threadSize_ <= 0) threadSize_ = 2;
-    for (int i = 0; i < threadSize_; ++i)
+public:
+    explicit QAsioTcpServerParentPrivate(QAsioTcpServerParent * tq);
+    ~QAsioTcpServerParentPrivate();
+
+    //监听acceptor
+    inline bool linstenAp(const boost::asio::ip::tcp::endpoint & endpoint) {
+        if (!acceptor) {
+            acceptor = new boost::asio::ip::tcp::acceptor(iosList[lastState]->getIoServer());
+            if (stand_) delete stand_;
+            stand_ = new boost::asio::io_service::strand(acceptor->get_io_service());
+        }
+        boost::system::error_code code;
+        acceptor->open(endpoint.protocol());
+        acceptor->set_option(boost::asio::ip::tcp::acceptor::reuse_address(false),code);
+        acceptor->bind(endpoint,code);
+        if (code)
+        {
+            this->error_ = code;
+            return false;
+        }
+        acceptor->listen(boost::asio::socket_base::max_connections, code);
+        if (code)
+        {
+            this->error_ = code;
+            return false;
+        }
+        if (!socket_)
+            socket_ = new boost::asio::ip::tcp::socket(iosList[lastState]->getIoServer());
+        acceptor->async_accept(*socket_,
+                               stand_->wrap(boost::bind(&QAsioTcpServerParentPrivate::appectHandle,this,boost::asio::placeholders::error())));
+        return true;
+    }
+
+    inline bool setNewSocket(QAsioTcpSocketParent * socket)
     {
-        auto thread = new IOServerThread(this);
-        thread->start();
-        iosserverList.append(thread);
+        bool istrue = socket->setTcpSocket(socket_);
+        if (istrue) {
+            socket_ = 0;
+        }
+        return istrue;
+    }
+
+    inline void close(){
+        if (acceptor) {
+            if (acceptor->is_open()){
+                acceptor->close();
+            }
+        }
+    }
+
+    boost::system::error_code error_;
+protected:
+    //切换新连接采用asio::io_service，采用公平队列，一次轮询
+    inline void goForward(){
+        if (q->IOSize == 0) {
+            lastState = 0;
+        } else {
+            lastState ++;
+            if (lastState == static_cast<int>(iosList.size()))
+                lastState = 0;
+        } }
+    //有新连接的回调
+    void appectHandle(const boost::system::error_code & code);
+private:
+    QAsioTcpServerParent * q;
+    boost::asio::ip::tcp::acceptor * acceptor;
+    std::vector<IOServerThread *> iosList;
+    boost::asio::ip::tcp::socket * socket_;
+    boost::asio::io_service::strand * stand_;
+    int lastState;
+};
+
+QAsioTcpServerParentPrivate::QAsioTcpServerParentPrivate(QAsioTcpServerParent * tq):
+    q(tq),acceptor(0),socket_(0),stand_(0),lastState(0)
+{
+    for (int i = 0; i < q->IOSize; ++i)
+    {
+        IOServerThread * iost = new IOServerThread;
+        iost->setIoThreadSize(q->OneIOThread);
+        iosList.push_back(iost);
     }
 }
 
-QAsioTcpServerParent::~QAsioTcpServerParent()
+QAsioTcpServerParentPrivate::~QAsioTcpServerParentPrivate()
 {
     close();
-    if (acceptor != nullptr) delete acceptor;
-    if (socket_ != nullptr) delete socket_;
-    for (int i = 0; i < threadSize_; ++i)
+    if (acceptor) delete acceptor;
+    if (socket_) delete socket_;
+    for (std::vector<IOServerThread *>::size_type i = 0; i < iosList.size(); ++i)
     {
-        auto thread = iosserverList[i];
+        IOServerThread * thread = iosList[i];
         delete thread;
     }
 }
 
-void QAsioTcpServerParent::close()
+void QAsioTcpServerParentPrivate::appectHandle(const boost::system::error_code &code)
 {
-    if (acceptor != nullptr) {
-        if (acceptor->is_open()){
-            acceptor->close();
+    if (!code) {
+        q->incomingConnection();
+    } else {
+        error_ = code;
+        if (q->haveErro()){
+            q->type_ = QAsioTcpServerParent::None;
         }
     }
+    if (q->type_ == QAsioTcpServerParent::None){
+        close();
+        return;
+    }
+    if (!socket_) {
+        goForward();
+        socket_ = new boost::asio::ip::tcp::socket(iosList[lastState]->getIoServer());
+    }
+    acceptor->async_accept(*socket_,
+                           stand_->wrap(boost::bind(&QAsioTcpServerParentPrivate::appectHandle,this,boost::asio::placeholders::error())));
+}
+
+
+QAsioTcpServerParent::QAsioTcpServerParent( int OneIOThread,int IOSize, QObject *parent)
+    : QObject(parent),type_(None),OneIOThread(OneIOThread),IOSize(IOSize)
+{
+    if (this->OneIOThread <= 0) this->OneIOThread = 2;
+    if (this->IOSize <= 0) this->IOSize = 1;
+    p = new QAsioTcpServerParentPrivate(this);
+}
+
+QAsioTcpServerParent::~QAsioTcpServerParent()
+{
+    delete p;
+}
+
+void QAsioTcpServerParent::close()
+{
+    p->close();
     type_ = None;
     ip_.clear();
 }
 
-bool QAsioTcpServerParent::linstenAp(const asio::ip::tcp::endpoint & endpoint)
-{
-    goForward();
-    asio::error_code code;
-    acceptor->open(endpoint.protocol());
-    acceptor->set_option(asio::ip::tcp::acceptor::reuse_address(false),code);
-    acceptor->bind(endpoint,code);
-    if (code)
-    {
-        this->error_ = code;
-        return false;
-    }
-    acceptor->listen(asio::socket_base::max_connections, code);
-    if (code)
-    {
-        this->error_ = code;
-        return false;
-    }
-    if (socket_ == nullptr)
-        socket_ = new asio::ip::tcp::socket(iosserverList.at(lastState)->getIOServer());
-    acceptor->async_accept(*socket_,std::bind(&QAsioTcpServerParent::appectHandle,this,std::placeholders::_1));
-    return true;
-}
 
 bool QAsioTcpServerParent::listen(qint16 port, ListenType ltype)
 {
     bool tmpbool = false;
     close();
-#ifdef Q_OS_LINUX
-    ltype = Both;
-#endif
-    if (acceptor == nullptr)
-        acceptor = new asio::ip::tcp::acceptor(iosserverList.at(lastState)->getIOServer());
-    switch (ltype) {
+#ifdef Q_OS_WIN
+    switch (ltype) {  
     case IPV4 :
     {
-        asio::ip::tcp::endpoint endpot(asio::ip::tcp::v4(),port);
-        tmpbool = linstenAp(endpot);
+        boost::asio::ip::tcp::endpoint endpot(boost::asio::ip::tcp::v4(),port);
+        tmpbool = p->linstenAp(endpot);
     }
         break;
     case IPV6 :
     {
-        asio::ip::tcp::endpoint endpot(asio::ip::tcp::v6(),port);
-        tmpbool = linstenAp(endpot);
-    }
-        break;
-    case Both :
-    {
-        asio::ip::tcp::endpoint endpot(asio::ip::tcp::all(),port);
-        tmpbool = linstenAp(endpot);
+        boost::asio::ip::tcp::endpoint endpot(boost::asio::ip::tcp::v6(),port);
+        tmpbool = p->linstenAp(endpot);
     }
         break;
     default:
         break;
     }
+#else
+    if (ltype == Both) {
+        boost::asio::ip::tcp::endpoint endpot(boost::asio::ip::tcp::v4(),port);
+        tmpbool = p->linstenAp(endpot);
+    }
+#endif
     type_ = ltype;
     ip_ = "0";
     if (!tmpbool)
@@ -102,40 +187,38 @@ bool QAsioTcpServerParent::listen(const QString &ip, qint16 port)
 {
     bool tmpbool = false;
     close();
-    asio::error_code code;
-    asio::ip::address address = asio::ip::address::from_string(ip.toStdString(),code);
+    boost::system::error_code code;
+    boost::asio::ip::address address = boost::asio::ip::address::from_string(ip.toStdString(),code);
     if (code) {
-        this->error_ = code;
+        p->error_ = code;
         tmpbool =  false;
     } else {
-        if (acceptor == nullptr)
-            acceptor = new asio::ip::tcp::acceptor(iosserverList.at(lastState)->getIOServer());
         ip_ = ip;
-        asio::ip::tcp::endpoint endpot(address,port);
-        tmpbool = linstenAp(endpot);
+        boost::asio::ip::tcp::endpoint endpot(address,port);
+        tmpbool = p->linstenAp(endpot);
     }
-    if (!tmpbool)
+    if (!tmpbool) {
         close();
+    } else {
+#ifdef Q_OS_WIN
+        if (address.is_v4()) {
+            type_ = IPV4;
+        } else {
+            type_ = IPV6;
+        }
+#else
+      type_ = Both;
+#endif
+    }
     return tmpbool;
 }
 
-void QAsioTcpServerParent::appectHandle(const asio::error_code &code)
+bool QAsioTcpServerParent::setNewSocket(QAsioTcpSocketParent * socket)
 {
-    if (!code) {
-        incomingConnection(socket_);
-    } else {
-        error_ = code;
-        if (haveErro(code)){
-            type_ = None;
-        }
-    }
-    if (type_ == None){
-        close();
-        return;
-    }
-    goForward();
-    socket_ = new asio::ip::tcp::socket(iosserverList.at(lastState)->getIOServer());
-    acceptor->async_accept(*socket_,std::bind(&QAsioTcpServerParent::appectHandle,this,std::placeholders::_1));
+    return p->setNewSocket(socket);
 }
 
-
+int QAsioTcpServerParent::getEorrorCode() const
+{
+    return p->error_.value();
+}

@@ -16,31 +16,33 @@
 #include <ws2tcpip.h>
 #endif
 
-#include "include_asio/asio.hpp"
-#include <QThread>
-#include <QPointer>
+#include <boost/asio.hpp>
+
+class IOServerThreadPrivate;
+class QAsioTcpServerParent;
 
 /// @brief asio::io_service 线程类封装 继承QThread，在单独的线程中运行一个asio的事件循环
 /// @note 内部类，外部引用不到
-class IOServerThread : public QThread
+class IOServerThread
 {
-    Q_OBJECT
 public:
-    explicit IOServerThread(QObject *parent = 0);
     ~IOServerThread();
-
     /// @brief 获取唯一的一个后台的io_server
-    static QPointer<IOServerThread> & getIOThread();
-public:
-
-    /// @brief 获取线程中运行的asio::io_service的引用
-    asio::io_service & getIOServer(){return server;}
-
+    static IOServerThread & getIOThread() {
+        static IOServerThread server;
+        return server;
+    }
+    void setIoThreadSize(int size = 0);
+    int getIoThreadSize() const;
+    boost::asio::io_service & getIoServer();
 protected:
-    void run();
+    explicit IOServerThread(): p(0) {}
+    friend class QAsioTcpServerParentPrivate;
 private:
-    asio::io_service server;
-    static QPointer<IOServerThread> ioserver;
+    IOServerThread(const IOServerThread &){}
+    IOServerThread &operator= (const IOServerThread & ){return *this;}
+    IOServerThreadPrivate * p;
 };
+
 
 #endif // IOSERVERTHREAD_H
