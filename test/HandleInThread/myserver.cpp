@@ -14,16 +14,20 @@ MyServer::~MyServer()
 
 }
 
-bool MyServer::haveErro(const asio::error_code & /*code*/)
+bool MyServer::haveErro()
 {
     return true;
 }
 
-void MyServer::incomingConnection(asio::ip::tcp::socket * socket)
+void MyServer::incomingConnection()
 {
-    MySocket * asiosocket = new MySocket(socket,bsize);
-    asiosocket->moveToThread(this->thread());
-    handler.add(asiosocket);
-    qDebug() << "Thread Id:" << QThread::currentThreadId() << "\t\t"
-             << "HaveNewConnecd ID:" << asiosocket->socketDescriptor();
+    MySocket * asiosocket = new MySocket(bsize);
+    if (setNewSocket(asiosocket)) {
+        asiosocket->moveToThread(this->thread());
+        handler.add(asiosocket);
+        qDebug() << "Thread Id:" << QThread::currentThreadId() << "\t\t"
+                 << "HaveNewConnecd ID:" << asiosocket->socketDescriptor();
+    } else {
+        delete asiosocket;
+    }
 }

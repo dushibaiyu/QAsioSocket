@@ -12,11 +12,18 @@ TARGET = QAsioTcpServer
 CONFIG   += console
 CONFIG   -= app_bundle
 
-win32:!win32-g++:DEFINES += NOMINMAX
-include(../../src/AsioTcp.pri)
+include(../../QAsioSocket.pri)
 
 SOURCES += main.cpp \
     testserver.cpp
 
 HEADERS += \
     testserver.h
+
+
+
+#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../lib/ -lQAsioSocket0
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../lib/ -lQAsioSocketd0
+
+#INCLUDEPATH += $$PWD/../../include
+#DEPENDPATH += $$PWD/../../include

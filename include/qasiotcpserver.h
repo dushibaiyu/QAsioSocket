@@ -25,7 +25,7 @@ public:
     /// @param threadSize服务端开启的asio::io_service的数目
     /// @note 当threadSize<=0 时，默认是开启两个
     /// @param parent父对象指针，Qt父子关系对象的父对象
-    explicit QAsioTcpServer(int readSize = 4096, int OneIOThread = 2, int IOSize = 1, QObject *parent = 0);
+    explicit QAsioTcpServer(int readSize = 4096, int ThreadSize = 2, QObject *parent = 0);
 
     /// @brief 析构函数
     virtual ~QAsioTcpServer();

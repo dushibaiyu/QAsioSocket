@@ -5,26 +5,17 @@
 #include "qasiotcpserverparentprivate.h"
 
 QAsioTcpServerParentPrivate::QAsioTcpServerParentPrivate(QAsioTcpServerParent * tq):
-    q(tq),acceptor(0),socket_(0),stand_(0),lastState(0)
+    q(tq),acceptor(0),socket_(0),stand_(0),iosService(IOServerThread::getIOThread())
 {
-    for (int i = 0; i < q->IOSize; ++i)
-    {
-        IOServerThread * iost = new IOServerThread;
-        iost->setIoThreadSize(q->OneIOThread);
-        iosList.push_back(iost);
-    }
+    q->threadSize = iosService.setIoThreadSize(q->threadSize);
 }
 
 QAsioTcpServerParentPrivate::~QAsioTcpServerParentPrivate()
 {
     close();
     if (acceptor) delete acceptor;
+    if (stand_) delete stand_;
     if (socket_) delete socket_;
-    for (std::vector<IOServerThread *>::size_type i = 0; i < iosList.size(); ++i)
-    {
-        IOServerThread * thread = iosList[i];
-        delete thread;
-    }
 }
 
 void QAsioTcpServerParentPrivate::appectHandle(const boost::system::error_code &code)
@@ -42,19 +33,17 @@ void QAsioTcpServerParentPrivate::appectHandle(const boost::system::error_code &
         return;
     }
     if (!socket_) {
-        goForward();
-        socket_ = new boost::asio::ip::tcp::socket(iosList[lastState]->getIoServer());
+        socket_ = new boost::asio::ip::tcp::socket(iosService.getIoServer());
     }
     acceptor->async_accept(*socket_,
                            stand_->wrap(boost::bind(&QAsioTcpServerParentPrivate::appectHandle,this,boost::asio::placeholders::error)));
 }
 
 
-QAsioTcpServerParent::QAsioTcpServerParent( int OneIOThread,int IOSize, QObject *parent)
-    : QObject(parent),type_(None),OneIOThread(OneIOThread),IOSize(IOSize)
+QAsioTcpServerParent::QAsioTcpServerParent(int threadSize, QObject *parent)
+    : QObject(parent),type_(None),threadSize(threadSize)
 {
-    if (this->OneIOThread <= 0) this->OneIOThread = 2;
-    if (this->IOSize <= 0) this->IOSize = 1;
+    if (this->threadSize <= 0) this->threadSize = 2;
     p = new QAsioTcpServerParentPrivate(this);
 }
 

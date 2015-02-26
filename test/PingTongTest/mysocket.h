@@ -13,10 +13,10 @@ public:
     explicit MySocket(int size,QObject * parent = 0);
     ~MySocket();
 
-    int readCount = 0;
-    qint64 readSize = 0;
-    int writeCount = 0;
-    qint64 writeSize = 0;
+    int readCount;
+    qint64 readSize;
+    int writeCount;
+    qint64 writeSize;
 protected:
     virtual bool write(const QByteArray &data);
     virtual void haveErro();
@@ -24,9 +24,6 @@ protected:
     virtual void readDataed(const char * data,std::size_t bytes_transferred);
     virtual bool writeDataed(std::size_t bytes_transferred);
     virtual void finedHosted();
-protected:
-    MySocket(asio::ip::tcp::socket * socket ,int size = 4096, QObject *parent = 0);
-    friend class MyServer;
 private:
     QQueue<QByteArray> writeQueue;
 private:

@@ -14,8 +14,7 @@ CONFIG   -= app_bundle
 
 TEMPLATE = app
 
-win32:!win32-g++:DEFINES += NOMINMAX
-include(../../src/AsioTcp.pri)
+include(../../QAsioSocket.pri)
 
 SOURCES += main.cpp \
     mysocket.cpp \

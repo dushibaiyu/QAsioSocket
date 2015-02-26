@@ -24,5 +24,4 @@ DEFINES += BOOST_ALL_NO_LIB
 
 INCLUDEPATH += D:/boost_1_57_0
 
-win32:!win32-g++:DEFINES += NOMINMAX
 include(../../QAsioSocket.pri)

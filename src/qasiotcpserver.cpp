@@ -26,8 +26,8 @@ private:
 
 const QEvent::Type QAsioNewEvent::QAsioNewEventType = (QEvent::Type)QEvent::registerEventType();
 
-QAsioTcpServer::QAsioTcpServer(int readSize,int OneIOThread,int IOSize, QObject *parent) :
-    QAsioTcpServerParent(OneIOThread,IOSize,parent),byteSize(readSize)
+QAsioTcpServer::QAsioTcpServer(int readSize,int ThreadSize, QObject *parent) :
+    QAsioTcpServerParent(ThreadSize,parent),byteSize(readSize)
 {}
 
 QAsioTcpServer::~QAsioTcpServer()

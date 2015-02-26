@@ -14,9 +14,9 @@ public:
     //监听acceptor
     inline bool linstenAp(const boost::asio::ip::tcp::endpoint & endpoint) {
         if (!acceptor) {
-            acceptor = new boost::asio::ip::tcp::acceptor(iosList[lastState]->getIoServer());
-            if (stand_) delete stand_;
-            stand_ = new boost::asio::io_service::strand(acceptor->get_io_service());
+            acceptor = new boost::asio::ip::tcp::acceptor(iosService.getIoServer());
+            if (!stand_)
+                stand_ = new boost::asio::io_service::strand(acceptor->get_io_service());
         }
         boost::system::error_code code;
         acceptor->open(endpoint.protocol());
@@ -34,7 +34,7 @@ public:
             return false;
         }
         if (!socket_)
-            socket_ = new boost::asio::ip::tcp::socket(iosList[lastState]->getIoServer());
+            socket_ = new boost::asio::ip::tcp::socket(iosService.getIoServer());
         acceptor->async_accept(*socket_,
                                stand_->wrap(boost::bind(&QAsioTcpServerParentPrivate::appectHandle,this,boost::asio::placeholders::error)));
         return true;
@@ -59,24 +59,14 @@ public:
 
     boost::system::error_code error_;
 protected:
-    //切换新连接采用asio::io_service，采用公平队列，一次轮询
-    inline void goForward(){
-        if (q->IOSize == 0) {
-            lastState = 0;
-        } else {
-            lastState ++;
-            if (lastState == static_cast<int>(iosList.size()))
-                lastState = 0;
-        } }
     //有新连接的回调
     void appectHandle(const boost::system::error_code & code);
 private:
     QAsioTcpServerParent * q;
     boost::asio::ip::tcp::acceptor * acceptor;
-    std::vector<IOServerThread *> iosList;
     boost::asio::ip::tcp::socket * socket_;
     boost::asio::io_service::strand * stand_;
-    int lastState;
+    IOServerThread  & iosService;
 };
 
 

@@ -16,8 +16,8 @@ signals:
 public slots:
 
 protected:
-    bool haveErro(const asio::error_code &);
-    void incomingConnection(asio::ip::tcp::socket * socket);
+    bool haveErro();
+    void incomingConnection();
 
 private:
     QObjectCleanupHandler handler;

@@ -8,11 +8,11 @@
 #include <QFile>
 
 MySocket::MySocket(int size, QObject *parent) : QAsioTcpSocketParent(size,parent)
-{}
-
-MySocket::MySocket(asio::ip::tcp::socket * socket , int size, QObject *parent)
-    : QAsioTcpSocketParent(socket,size,parent)
 {
+    readCount = 0;
+    readSize = 0;
+    writeCount = 0;
+    writeSize = 0;
 }
 
 MySocket::~MySocket()

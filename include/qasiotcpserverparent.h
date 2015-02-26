@@ -11,7 +11,7 @@ class QASIOSOCKET_EXPORT QAsioTcpServerParent : public QObject
 {
     Q_OBJECT
 public:
-    explicit QAsioTcpServerParent(int OneIOThread,int IOSize, QObject *parent = 0);
+    explicit QAsioTcpServerParent(int threadSize, QObject *parent = 0);
     virtual ~QAsioTcpServerParent();
 
     /// @brief 监听的类型枚举
@@ -45,10 +45,7 @@ public:
     ///  返回空表示没在监听状态
     QString listenIP() const {return ip_;}
 
-    /// @brief 当前服务端开启的asio::io_service的数目
-    int getIOSize() const {return IOSize;}
-
-    int getOneIOThread() const {return OneIOThread;}
+    int getThreadSize() const {return threadSize;}
 
 
 public slots:
@@ -91,7 +88,7 @@ private:
     qint16 port_;
     ListenType type_;
     QString ip_;
-    int OneIOThread,IOSize;
+    int threadSize;
     Q_DISABLE_COPY(QAsioTcpServerParent)
 };
 

@@ -18,13 +18,10 @@ public :
             delete socket_;
         }
         socket_ = socket;
-        if (stand_) {
-            delete stand_;
-        }
-        stand_ = new boost::asio::io_service::strand(socket_->get_io_service());
-        if (q->timeOut_s > 0) {
+        if (!stand_)
+            stand_ = new boost::asio::io_service::strand(socket_->get_io_service());
+        if (q->timeOut_s > 0)
             setHeartTimeOut();
-        }
         if (socket_->is_open()) {
             socket_->async_read_some(boost::asio::buffer(data_,byteSize_),
                                      stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::readHandler,this,
@@ -45,10 +42,8 @@ public :
     inline void connectToHost(const QString & hostName, quint16 port) {
         if (!socket_){
             socket_ = new boost::asio::ip::tcp::socket(IOServerThread::getIOThread().getIoServer());
-            if (stand_) {
-                delete stand_;
-            }
-            stand_ = new boost::asio::io_service::strand(socket_->get_io_service());
+            if (!stand_)
+                stand_ = new boost::asio::io_service::strand(socket_->get_io_service());
             if (q->timeOut_s > 0) {
                 setHeartTimeOut();
             }

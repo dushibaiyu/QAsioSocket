@@ -25,5 +25,4 @@ HEADERS += \
     threadhandle.h \
     mysocket.h
 
-win32:!win32-g++:DEFINES += NOMINMAX
-include(../../src/AsioTcp.pri)
+include(../../QAsioSocket.pri)
