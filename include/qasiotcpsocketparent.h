@@ -7,6 +7,7 @@
 
 //typedef typename boost::asio::ip::tcp::socket TcpSocket;
 class QAsioTcpSocketParentPrivate;
+class QAsioTcpServerParentPrivate;
 
 class QASIOSOCKET_EXPORT QAsioTcpSocketParent : public QObject
 {
@@ -73,8 +74,8 @@ public:
 
     QString getPeerIp() const {return peerIp;}
     qint16 getPeerPort() const {return peerPort;}
-    template<typename TcpSocket>
-    bool setTcpSocket(TcpSocket *socket);
+//    template<typename TcpSocket>
+//    bool setTcpSocket(TcpSocket *socket);
     void setHeartTimeOut(int s);
 
     int getHeartTimeOut() const {return timeOut_s;}
@@ -98,6 +99,7 @@ private:
     int timeOut_s;
     QAsioTcpSocketParentPrivate * p;
     friend class QAsioTcpSocketParentPrivate;
+    friend class QAsioTcpServerParentPrivate;
     Q_DISABLE_COPY(QAsioTcpSocketParent)
 };
 

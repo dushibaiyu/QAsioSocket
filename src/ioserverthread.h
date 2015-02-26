@@ -15,8 +15,8 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #endif
-
 #include <boost/asio.hpp>
+#include <boost/system/error_code.hpp>
 
 class IOServerThreadPrivate;
 class QAsioTcpServerParent;
