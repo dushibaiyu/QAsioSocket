@@ -2,7 +2,7 @@
 #define QASIOTCPSOCKETPARENT_H
 
 #include <QObject>
-#include <QAtomicInt>
+//#include <QAtomicInt>
 #include "qasiosocket.h"
 
 //typedef typename boost::asio::ip::tcp::socket TcpSocket;
@@ -74,8 +74,6 @@ public:
 
     QString getPeerIp() const {return peerIp;}
     qint16 getPeerPort() const {return peerPort;}
-//    template<typename TcpSocket>
-//    bool setTcpSocket(TcpSocket *socket);
     void setHeartTimeOut(int s);
 
     int getHeartTimeOut() const {return timeOut_s;}
@@ -93,7 +91,7 @@ protected:
     void wirteData(const char * data,std::size_t size);
 
 private:
-    QAtomicInt state_ ;//变成原子操作
+    /*QAtomicInt*/int state_ ;//变成原子操作
     QString peerIp;
     qint16 peerPort;
     int timeOut_s;

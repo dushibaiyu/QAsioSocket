@@ -179,16 +179,12 @@ int QAsioTcpSocketParent::error() const
 {
     return p->erro_code.value();
 }
-//template<typename TcpSocket>
-//bool QAsioTcpSocketParent::setTcpSocket(TcpSocket *socket)
-//{
-//    return p->setTcpSocket(socket);
-//}
 
 void QAsioTcpSocketParent::setHeartTimeOut(int s)
 {
-    if (s < 10) s = 10;
     this->timeOut_s = s;
+    if (this->timeOut_s <= 0) this->timeOut_s = 0;
+    else if (this->timeOut_s < 10) this->timeOut_s = 10;
     p->setHeartTimeOut();
 }
 

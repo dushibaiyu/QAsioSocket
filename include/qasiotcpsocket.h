@@ -10,6 +10,7 @@
 #ifndef QASIOTCPSOCKET_H
 #define QASIOTCPSOCKET_H
 
+#include <QObject>
 #include <QBuffer>
 #include <QMutex>
 #include <QMutexLocker>
@@ -119,7 +120,6 @@ private:
     QBuffer buffer;
     QMutex bufferMutex;
     bool isDisconDelData;
-
     Q_DISABLE_COPY(QAsioTcpSocket)
 };
 

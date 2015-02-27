@@ -20,9 +20,11 @@ public :
         socket_ = socket;
         if (!stand_)
             stand_ = new boost::asio::io_service::strand(socket_->get_io_service());
-        if (q->timeOut_s > 0)
-            setHeartTimeOut();
+        setHeartTimeOut();
         if (socket_->is_open()) {
+            boost::asio::ip::tcp::endpoint peerPoint = socket_->remote_endpoint(erro_code);
+            q->peerIp = QString::fromStdString(peerPoint.address().to_string());
+            q->peerPort = peerPoint.port();
             socket_->async_read_some(boost::asio::buffer(data_,byteSize_),
                                      stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::readHandler,this,
                                                  boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred)));
@@ -44,9 +46,7 @@ public :
             socket_ = new boost::asio::ip::tcp::socket(IOServerThread::getIOThread().getIoServer());
             if (!stand_)
                 stand_ = new boost::asio::io_service::strand(socket_->get_io_service());
-            if (q->timeOut_s > 0) {
-                setHeartTimeOut();
-            }
+            setHeartTimeOut();
         } else if (socket_->is_open()) {
             socket_->close(erro_code);
         }
@@ -79,8 +79,14 @@ public :
                 delete timer;
                 timer = 0;
             }
-            if (socket_)
+            if (!q->timeOut_s){
+                return;
+            }
+            if (socket_) {
                 timer = new boost::asio::deadline_timer(socket_->get_io_service(),boost::posix_time::seconds(q->timeOut_s));
+                if (q->state_ == QAsioTcpSocketParent::ConnectedState)
+                  timer->async_wait(boost::bind(&QAsioTcpSocketParentPrivate::heartTimeOutHandler,this,boost::asio::placeholders::error));
+            }
         }
 
     boost::system::error_code erro_code;

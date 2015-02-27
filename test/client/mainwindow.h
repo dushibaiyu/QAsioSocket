@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QtCore>
-#include "qasiotcpsocket.h"
+#include <qasiotcpsocket.h>
 
 namespace Ui {
 class MainWindow;

@@ -43,7 +43,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context,cons
 
 int main(int argc, char *argv[])
 {
-//    qInstallMessageHandler(customMessageHandler);
+    qInstallMessageHandler(customMessageHandler);
     QCoreApplication a(argc, argv);
 
     MyServer server(1);
