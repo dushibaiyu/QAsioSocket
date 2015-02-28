@@ -35,7 +35,9 @@ void QAsioTcpServerParentPrivate::appectHandle(const boost::system::error_code &
     if (!socket_) {
         socket_ = new boost::asio::ip::tcp::socket(iosService.getIoServer());
     } else {
-        socket_->close();
+        boost::system::error_code tcode_;
+        socket_->cancel(tcode_);
+        socket_->close(tcode_);
     }
     acceptor->async_accept(*socket_,
                            stand_->wrap(boost::bind(&QAsioTcpServerParentPrivate::appectHandle,this,boost::asio::placeholders::error)));

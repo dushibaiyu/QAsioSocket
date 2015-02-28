@@ -13,13 +13,16 @@ public :
     inline bool setTcpSocket(boost::asio::ip::tcp::socket *socket) {
         if (!data_) return false;
         if (socket_) {
-            if (socket_->is_open())
+            if (socket_->is_open()) {
                 socket_->close(erro_code);
+            } else {
+                socket_->cancel(erro_code);
+            }
             delete socket_;
         }
         socket_ = socket;
         if (!stand_)
-            stand_ = new boost::asio::io_service::strand(socket_->get_io_service());
+            stand_ = new boost::asio::io_service::strand(IOServerThread::getIOThread().getIoServer());
         setHeartTimeOut();
         if (socket_->is_open()) {
             boost::asio::ip::tcp::endpoint peerPoint = socket_->remote_endpoint(erro_code);
@@ -37,32 +40,31 @@ public :
         return true;
     }
     inline  void wirteData(const char * data,std::size_t size) {
-        boost::asio::async_write(*socket_,boost::asio::buffer(data,size),
+        if (socketDescriptor() != -1) {
+            boost::asio::async_write(*socket_,boost::asio::buffer(data,size),
                           stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::writeHandler,this,
                                                    boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred)));
+        }
     }
     inline void connectToHost(const QString & hostName, quint16 port) {
-        if (!socket_){
-            socket_ = new boost::asio::ip::tcp::socket(IOServerThread::getIOThread().getIoServer());
-            if (!stand_)
-                stand_ = new boost::asio::io_service::strand(socket_->get_io_service());
-            setHeartTimeOut();
-        } else if (socket_->is_open()) {
-            socket_->close(erro_code);
-        }
         if (!resolver_)
-            resolver_ = new boost::asio::ip::tcp::resolver(socket_->get_io_service());
+            resolver_ = new boost::asio::ip::tcp::resolver(IOServerThread::getIOThread().getIoServer());
+        else
+            resolver_->cancel();
+        if (!stand_)
+            stand_ = new boost::asio::io_service::strand(IOServerThread::getIOThread().getIoServer());
         if (timer)
             timer->cancel();
         resolver_->async_resolve(boost::asio::ip::tcp::resolver::query(hostName.toStdString(),QString::number(port).toStdString()),
-                                 boost::bind(&QAsioTcpSocketParentPrivate::resolverHandle,this, boost::asio::placeholders::error,boost::asio::placeholders::iterator));
+                                 stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::resolverHandle,this, boost::asio::placeholders::error,boost::asio::placeholders::iterator)));
     }
 
     inline void disconnectFromHost() {
         if (timer)
             timer->cancel();
         if (q->state_ == QAsioTcpSocketParent::UnconnectedState) return;
-        socket_->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+        if (socket_)
+            socket_->shutdown(boost::asio::ip::tcp::socket::shutdown_both,erro_code);
     }
 
     inline  int socketDescriptor() const {
@@ -83,7 +85,7 @@ public :
                 return;
             }
             if (socket_) {
-                timer = new boost::asio::deadline_timer(socket_->get_io_service(),boost::posix_time::seconds(q->timeOut_s));
+                timer = new boost::asio::deadline_timer(IOServerThread::getIOThread().getIoServer(),boost::posix_time::seconds(q->timeOut_s));
                 if (q->state_ == QAsioTcpSocketParent::ConnectedState)
                   timer->async_wait(boost::bind(&QAsioTcpSocketParentPrivate::heartTimeOutHandler,this,boost::asio::placeholders::error));
             }

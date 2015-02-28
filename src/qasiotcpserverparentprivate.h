@@ -51,8 +51,10 @@ public:
 
     inline void close(){
         if (acceptor) {
+            boost::system::error_code tcode_;
+            acceptor->cancel(tcode_);
             if (acceptor->is_open()){
-                acceptor->close();
+                acceptor->close(tcode_);
             }
         }
     }

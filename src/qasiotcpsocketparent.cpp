@@ -18,15 +18,20 @@ QAsioTcpSocketParentPrivate::QAsioTcpSocketParentPrivate(QAsioTcpSocketParent *t
 
 QAsioTcpSocketParentPrivate::~QAsioTcpSocketParentPrivate()
 {
-    if (resolver_)
-        delete resolver_;
     if (socket_) {
-        if (socket_->is_open())
-            socket_->close(erro_code);
+        boost::system::error_code errocode;
+        if (socket_->is_open()) {
+            socket_->close(errocode);
+        } else {
+            socket_->cancel(errocode);
+        }
         delete socket_;
     }
     if (stand_)
         delete stand_;
+    if (resolver_)
+        resolver_->cancel();
+        delete resolver_;
     if (data_)
         delete[] data_;
 }
@@ -50,8 +55,12 @@ void QAsioTcpSocketParentPrivate::readHandler(const boost::system::error_code& e
     } else {
         q->state_ = QAsioTcpSocketParent::UnconnectedState;
         q->erro_site = QAsioTcpSocketParent::ReadError;
-        if (socket_->is_open()) {
-            socket_->close(erro_code);
+        if (socket_) {
+            if (socket_->is_open()) {
+                socket_->close(erro_code);
+            } else {
+                socket_->cancel(erro_code);
+            }
         }
         erro_code = error;
         if (timer)
@@ -68,8 +77,12 @@ void QAsioTcpSocketParentPrivate::writeHandler(const boost::system::error_code& 
     } else {
         q->state_ = QAsioTcpSocketParent::UnconnectedState;
         q->erro_site = QAsioTcpSocketParent::WriteEorro;
-        if (socket_->is_open()) {
-            socket_->close(erro_code);
+        if (socket_) {
+            if (socket_->is_open()) {
+                socket_->close(erro_code);
+            } else {
+                socket_->cancel(erro_code);
+            }
         }
         erro_code = error;
         if (timer)
@@ -81,6 +94,9 @@ void QAsioTcpSocketParentPrivate::writeHandler(const boost::system::error_code& 
 void QAsioTcpSocketParentPrivate::resolverHandle(const boost::system::error_code &error, boost::asio::ip::tcp::resolver::iterator iter)
 {
     if (!error) {
+        if (!socket_) {
+            socket_ = new boost::asio::ip::tcp::socket(IOServerThread::getIOThread().getIoServer());
+        }
         boost::asio::async_connect((*socket_),iter,
                     stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::connectedHandler,
                                              this,boost::asio::placeholders::error,boost::asio::placeholders::iterator)));
@@ -98,9 +114,10 @@ void QAsioTcpSocketParentPrivate::resolverHandle(const boost::system::error_code
 void QAsioTcpSocketParentPrivate::connectedHandler(const boost::system::error_code& error, boost::asio::ip::tcp::resolver::iterator iter)
 {
     if (!error) {
-        if (data_) {
+        if (data_){
             q->state_ = QAsioTcpSocketParent::ConnectedState;
             q->erro_site = QAsioTcpSocketParent::NoError;
+            setHeartTimeOut();
             socket_->async_read_some(boost::asio::buffer(data_,byteSize_),
                                      stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::readHandler,this,
                                                  boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred)));
@@ -115,6 +132,8 @@ void QAsioTcpSocketParentPrivate::connectedHandler(const boost::system::error_co
             q->erro_site = QAsioTcpSocketParent::NoBufferSize;
             if (socket_->is_open()) {
                 socket_->close(erro_code);
+            } else {
+                socket_->cancel(erro_code);
             }
             erro_code = error;
             if (timer)
@@ -127,9 +146,6 @@ void QAsioTcpSocketParentPrivate::connectedHandler(const boost::system::error_co
         {
             q->state_ = QAsioTcpSocketParent::UnconnectedState;
             q->erro_site = QAsioTcpSocketParent::ConnectEorro;
-            if (socket_->is_open()) {
-                socket_->close(erro_code);
-            }
             erro_code = error;
             if (timer)
                 timer->cancel();

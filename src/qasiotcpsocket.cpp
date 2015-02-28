@@ -138,6 +138,8 @@ void QAsioTcpSocket::haveErro()
 
 void QAsioTcpSocket::hostConnected()
 {
+    qDebug() << this << "  QAsioTcpSocket::hostConnected() peerIp:" << getPeerIp() << "  peerPort:" << getPeerPort();
+
     QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::Connected));
 }
 
