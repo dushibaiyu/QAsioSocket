@@ -1,11 +1,11 @@
-# QAsioTcpSocket
+# QAsioSocket
 把asio的tcp操作封装成类似QTCpserver的操作。
 
 *********
 基本现在已经可用。
 使用方法：
-    1.把AsioTcp目录拷贝到您源码目录。
-    2.在pro文件中包含include(AsioTcp/AsioTcp.pri)即可
+    1.把QAsioSocket目录拷贝到您源码目录。
+    2.在pro文件中包含include(QAsioSocket/QAsioSocket.pri)即可
     
 **************************************
     支持C++11的编译器，Qt5.x版本。
