@@ -15,6 +15,7 @@ public :
     QAsioTcpSocketParentPrivate(int byteSize);
     ~QAsioTcpSocketParentPrivate();
     inline void setQPoint(QAsioTcpSocketParent * q){this->q = q;}
+
     inline bool setTcpSocket(boost::asio::ip::tcp::socket *socket) {
         if (!data_ || !q) return false;
         if (socket_) {
@@ -24,22 +25,19 @@ public :
         socket_ = socket;
         if (!stand_)
             stand_ = new boost::asio::io_service::strand(IOServerThread::getIOThread().getIoServer());
-        setHeartTimeOut();
         if (socket_->is_open()) {
+            state_ = QAsioTcpSocketParent::ConnectedState;
             boost::asio::ip::tcp::endpoint peerPoint = socket_->remote_endpoint(erro_code);
-            q->peerIp = QString::fromStdString(peerPoint.address().to_string());
-            q->peerPort = peerPoint.port();
+            peerIp = QString::fromStdString(peerPoint.address().to_string());
+            peerPort = peerPoint.port();
             socket_->async_read_some(boost::asio::buffer(data_,byteSize_),
                                      stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::readHandler,shared_from_this(),
                                                  boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred)));
-            q->state_ = QAsioTcpSocketParent::ConnectedState;
-            if (timer) {
-                timer->cancel();
-                timer->async_wait(boost::bind(&QAsioTcpSocketParentPrivate::heartTimeOutHandler,shared_from_this(),boost::asio::placeholders::error));
-            }
+            setHeartTimeOut();
         }
         return true;
     }
+
     inline  void wirteData(const char * data,std::size_t size) {
         if (socketDescriptor() != -1) {
             boost::asio::async_write(*socket_,boost::asio::buffer(data,size),
@@ -47,6 +45,7 @@ public :
                                                    boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred)));
         }
     }
+
     inline void connectToHost(const QString & hostName, quint16 port) {
         if (!resolver_)
             resolver_ = new boost::asio::ip::tcp::resolver(IOServerThread::getIOThread().getIoServer());
@@ -56,6 +55,7 @@ public :
             stand_ = new boost::asio::io_service::strand(IOServerThread::getIOThread().getIoServer());
         if (timer)
             timer->cancel();
+        state_ = QAsioTcpSocketParent::ConnectingState;
         resolver_->async_resolve(boost::asio::ip::tcp::resolver::query(hostName.toStdString(),QString::number(port).toStdString()),
                                  stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::resolverHandle,
                                                           shared_from_this(), boost::asio::placeholders::error,boost::asio::placeholders::iterator)));
@@ -64,9 +64,10 @@ public :
     inline void disconnectFromHost() {
         if (timer)
             timer->cancel();
-        if (q->state_ == QAsioTcpSocketParent::UnconnectedState) return;
+        if (state_ == QAsioTcpSocketParent::UnconnectedState) return;
         if (socket_)
             socket_->shutdown(boost::asio::ip::tcp::socket::shutdown_both,erro_code);
+
     }
 
     inline  int socketDescriptor() const {
@@ -88,13 +89,17 @@ public :
             }
             if (socket_) {
                 timer = new boost::asio::deadline_timer(IOServerThread::getIOThread().getIoServer(),boost::posix_time::seconds(q->timeOut_s));
-                if (q && q->state_ == QAsioTcpSocketParent::ConnectedState)
+                if (state_ == QAsioTcpSocketParent::ConnectedState)
                   timer->async_wait(boost::bind(&QAsioTcpSocketParentPrivate::heartTimeOutHandler,
                                                 shared_from_this(),boost::asio::placeholders::error));
             }
         }
 
     boost::system::error_code erro_code;
+    QAsioTcpSocketParent::SocketState state_;
+    QAsioTcpSocketParent::SocketErroSite erro_site;
+    QString peerIp;
+    qint16 peerPort;
 protected:
     // 数据读取的回调函数
     void readHandler(const boost::system::error_code& error, std::size_t bytes_transferred);
@@ -106,6 +111,20 @@ protected:
     void resolverHandle(const boost::system::error_code & error, boost::asio::ip::tcp::resolver::iterator iter);
 
     void heartTimeOutHandler(const boost::system::error_code& error);
+
+protected:
+    inline void setError(const boost::system::error_code & erro,QAsioTcpSocketParent::SocketErroSite state){
+        state_ = QAsioTcpSocketParent::UnconnectedState;
+        erro_site = state;
+        peerIp.clear();
+        peerPort = 0;
+        erro_code = erro;
+        if (timer)
+            timer->cancel();
+        if (q) {
+            q->haveErro();
+        }
+    }
 
 private:
     QAsioTcpSocketParent * q;

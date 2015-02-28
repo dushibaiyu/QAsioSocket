@@ -45,7 +45,7 @@ signals:
     /// @brief Signal 信号：发生错误信号
     /// @param site 发生错误的位置
     /// @param erro_code 错误码
-    void sentError(SocketErroSite & site,int erro_code);
+    void sentError(SocketErroSite site,int erro_code);
 
     /// @brief Signal 信号：解析主机成功的信号
     void hostFound();

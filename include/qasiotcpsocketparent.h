@@ -68,16 +68,16 @@ public:
     int socketDescriptor() const ;
 
     /// @brief 获取错误
-   int error() const ;
+    int error() const ;
 
     /// @brief 当前的链接状态
-    SocketState state() const { int tp = state_; return static_cast<SocketState>(tp);}
+    SocketState state() const ;
 
-    SocketErroSite erroSite() const {return this->erro_site;}
+    SocketErroSite erroSite() const ;
 
 
-    QString getPeerIp() const {return peerIp;}
-    qint16 getPeerPort() const {return peerPort;}
+    QString getPeerIp() const ;
+    qint16 getPeerPort() const ;
     void setHeartTimeOut(int s);
 
     int getHeartTimeOut() const {return timeOut_s;}
@@ -91,13 +91,9 @@ protected:
     virtual void heartTimeOut(int /*timeout*/){}
 
 protected:
-    SocketErroSite erro_site;
     void wirteData(const char * data,std::size_t size);
 
 private:
-    /*QAtomicInt*/int state_ ;//变成原子操作
-    QString peerIp;
-    qint16 peerPort;
     int timeOut_s;
 //    QAsioTcpSocketParentPrivate * p;
     boost::shared_ptr<QAsioTcpSocketParentPrivate> * p;

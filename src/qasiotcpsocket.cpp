@@ -90,7 +90,7 @@ void QAsioTcpSocket::customEvent(QEvent *event)
             emit connected();
             break;
         case QAsioEvent::HaveEorro :
-            emit sentError(erro_site,error());
+            emit sentError(erroSite(),error());
             emit stateChange(UnconnectedState);
             emit disconnected();
             break;
@@ -115,7 +115,7 @@ void QAsioTcpSocket::customEvent(QEvent *event)
 
 void QAsioTcpSocket::haveErro()
 {
-    switch (erro_site) {
+    switch (erroSite()) {
     case NoError:
         QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::DisConnect),Qt::HighEventPriority);
         break;
