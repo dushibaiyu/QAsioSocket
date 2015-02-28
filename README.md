@@ -4,17 +4,18 @@
 *********
 基本现在已经可用。
 使用方法：
-    1.把AsioTcp目录拷贝到您源码目录。
-    2.在pro文件中包含include(AsioTcp/AsioTcp.pri)即可
+    1.把QAsioSocket目录拷贝到您源码目录。
+    2.在pro文件中包含include(QAsioSocket/QAsioSocket.pri)
+    3.在你的项目中链接boost_system,boost_thread,boost_datetime库
+
+    动态库加载方式正在测试。
     
 **************************************
-    支持C++11的编译器，Qt5.x版本。
-        windows： vs2013
+    Boost，Qt5.x版本 依赖。
+        windows： vs2010 +
         linux ： gcc
 
     源码协议boost1.0
-
-    现在里面包含的asio版本为1.10.2，不依赖boost，需要C++11支持
 
 ***************************************
 
