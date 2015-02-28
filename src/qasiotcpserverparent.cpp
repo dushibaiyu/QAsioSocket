@@ -34,6 +34,8 @@ void QAsioTcpServerParentPrivate::appectHandle(const boost::system::error_code &
     }
     if (!socket_) {
         socket_ = new boost::asio::ip::tcp::socket(iosService.getIoServer());
+    } else {
+        socket_->close();
     }
     acceptor->async_accept(*socket_,
                            stand_->wrap(boost::bind(&QAsioTcpServerParentPrivate::appectHandle,this,boost::asio::placeholders::error)));
@@ -65,7 +67,7 @@ bool QAsioTcpServerParent::listen(qint16 port, ListenType ltype)
     bool tmpbool = false;
     close();
 #ifdef Q_OS_WIN
-    switch (ltype) {  
+    switch (ltype) {
     case IPV4 :
     {
         boost::asio::ip::tcp::endpoint endpot(boost::asio::ip::tcp::v4(),port);
