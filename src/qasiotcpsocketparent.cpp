@@ -1,200 +1,172 @@
-﻿#include "qasiotcpsocketparent.h"
-#include <functional>
+﻿#ifdef _MSC_VER
+#pragma execution_character_set("utf-8")
+#endif
+
+#include "qasiotcpsocketparentprivate.h"
 #include <QDebug>
 
-QAsioTcpSocketParent::QAsioTcpSocketParent(int byteSize, QObject *parent) :
-    QObject(parent),byteSize_(byteSize)
+QAsioTcpSocketParentPrivate::QAsioTcpSocketParentPrivate(int byteSize) :
+    q(0),socket_(0),resolver_(0),byteSize_(byteSize),data_(0)
 {
     try {
         data_ = new char[byteSize];
-        socket_ = new asio::ip::tcp::socket(IOServerThread::getIOThread()->getIOServer());
     } catch (std::bad_alloc & /*bad*/) {
-        data_ = nullptr;
+        data_ = 0;
         qWarning() << "new Bad the new size is " << byteSize;
-//        throw bad;
+    }
+    state_ = QAsioTcpSocketParent::UnconnectedState;
+    erro_site = QAsioTcpSocketParent::ReadError;
+    peerPort = 0;
+}
+
+QAsioTcpSocketParentPrivate::~QAsioTcpSocketParentPrivate()
+{
+    if (socket_) {
+        asio::error_code errocode;
+        socket_->close(errocode);
+        delete socket_;
+    }
+    if (resolver_)
+        resolver_->cancel();
+        delete resolver_;
+    if (data_)
+        delete[] data_;
+}
+
+void QAsioTcpSocketParentPrivate::readHandler(const asio::error_code& error, std::size_t bytes_transferred)
+{
+    if(!error){
+        if (bytes_transferred == 0){
+            disconnectFromHost();
+            return;
+        }
+        if (q) {
+            q->readDataed(data_,bytes_transferred);
+            socket_->async_read_some(asio::buffer(data_,byteSize_),
+                                     std::bind(&QAsioTcpSocketParentPrivate::readHandler,shared_from_this(),
+                                                              std::placeholders::_1,std::placeholders::_2));
+        }
+
+    } else {
+        setError(error,QAsioTcpSocketParent::ReadError);
     }
 }
 
-QAsioTcpSocketParent::QAsioTcpSocketParent(asio::ip::tcp::socket *socket,int byteSize, QObject *parent) :
-    QObject(parent),socket_(socket),byteSize_(byteSize)
+void QAsioTcpSocketParentPrivate::writeHandler(const asio::error_code& error, std::size_t bytes_transferred)
 {
-    //    asio::async_read(*socket_,asio::buffer(data_,/*data_.max_size()*/byteSize_),
-    //                     std::bind(&QAsioTcpSocket::readHandler,this,std::placeholders::_1,std::placeholders::_2));
-    try {
-        data_ = new char[byteSize];
-        if (socket_->is_open()) {
-            socket_->async_read_some(asio::buffer(data_,/*data_.max_size()*/byteSize_),
-                                     std::bind(&QAsioTcpSocketParent::readHandler,this,std::placeholders::_1,std::placeholders::_2));
-            state_ = ConnectedState;
-        }
-    } catch (std::bad_alloc & /*bad*/) {
-        if (socket_->is_open()) {
-            socket_->close(erro_code);
-        }
-        data_ = nullptr;
-        qWarning() << "new Bad the new size is " << byteSize;
-//        throw bad;
+    if (!error && q){
+        if (!q->writeDataed(bytes_transferred))
+            disconnectFromHost();
+    } else {
+        setError(error,QAsioTcpSocketParent::WriteEorro);
     }
+}
+
+void QAsioTcpSocketParentPrivate::resolverHandle(const asio::error_code &error, asio::ip::tcp::resolver::iterator iter)
+{
+    if (!error && q) {
+        q->finedHosted();
+        if (!socket_) {
+            socket_ = new asio::ip::tcp::socket(IOServerThread::getIOThread()->getIOServer());
+        }
+        asio::async_connect((*socket_),iter,
+                    std::bind(&QAsioTcpSocketParentPrivate::connectedHandler,
+                                             shared_from_this(),std::placeholders::_1,std::placeholders::_2));
+    } else {
+        setError(error,QAsioTcpSocketParent::FindHostError);
+    }
+}
+
+void QAsioTcpSocketParentPrivate::connectedHandler(const asio::error_code& error, asio::ip::tcp::resolver::iterator iter)
+{
+    if (!error) {
+        if (data_){
+            state_ = QAsioTcpSocketParent::ConnectedState;
+            erro_site = QAsioTcpSocketParent::NoError;
+            asio::ip::tcp::endpoint peerPoint = socket_->remote_endpoint(erro_code);
+            peerIp = QString::fromStdString(peerPoint.address().to_string());
+            peerPort = peerPoint.port();
+            if (q) {
+                q->hostConnected();
+                socket_->async_read_some(asio::buffer(data_,byteSize_),
+                                         std::bind(&QAsioTcpSocketParentPrivate::readHandler,shared_from_this(),
+                                                     std::placeholders::_1,std::placeholders::_2));
+            }
+        } else {
+            disconnectFromHost();
+            setError(error,QAsioTcpSocketParent::NoBufferSize);
+        }
+    } else {
+        asio::ip::tcp::resolver::iterator end;
+        if(iter == end)
+        {
+            setError(error,QAsioTcpSocketParent::ConnectEorro);
+        }
+    }
+}
+
+
+QAsioTcpSocketParent::QAsioTcpSocketParent(int byteSize, QObject *parent) :
+    QObject(parent),timeOut_s(0)
+{
+    QAsioTcpSocketParentPrivate * tp = new QAsioTcpSocketParentPrivate(byteSize);
+    tp->setQPoint(this);
+    p = new std::shared_ptr<QAsioTcpSocketParentPrivate>(tp);
 }
 
 QAsioTcpSocketParent::~QAsioTcpSocketParent()
 {
-    if (resolver_ != nullptr)
-        delete resolver_;
-    if (socket_ != nullptr) {
-        if (socket_->is_open())
-            socket_->close(erro_code);
-        delete socket_;
-    }
-    if (data_ != nullptr)
-        delete[] data_;
-}
-
-void QAsioTcpSocketParent::readHandler(const asio::error_code &error, std::size_t bytes_transferred)
-{
-    if(!error){
-        if (bytes_transferred == 0){
-            state_ = UnconnectedState;
-            erro_site = NoError;
-            if (socket_->is_open())
-                socket_->close(erro_code);
-            erro_code = error;
-#ifdef ASIO_HAS_BOOST_DATE_TIME
-            if (timer != nullptr)
-                timer->cancel();
-#endif
-            haveErro();
-            return;
-        }
-//        readDataed(data_.data(),bytes_transferred);
-        readDataed(data_,bytes_transferred);
-#ifdef ASIO_HAS_BOOST_DATE_TIME
-        if (timer != nullptr) {
-            timer->cancel();
-            timer->async_wait(std::bind(&QAsioTcpSocketParent::heartTimeOutHandler,this,std::placeholders::_1));
-        }
-#endif
-        socket_->async_read_some(asio::buffer(data_,/*data_.max_size()*/byteSize_),
-                                 std::bind(&QAsioTcpSocketParent::readHandler,this,std::placeholders::_1,std::placeholders::_2));
-
-    } else {
-        state_ = UnconnectedState;
-        erro_site = ReadError;
-        if (socket_->is_open()) {
-            socket_->close(erro_code);
-        }
-        erro_code = error;
-#ifdef ASIO_HAS_BOOST_DATE_TIME
-        if (timer != nullptr)
-            timer->cancel();
-#endif
-        haveErro();
-    }
-}
-
-void QAsioTcpSocketParent::writeHandler(const asio::error_code &error, std::size_t bytes_transferred)
-{
-    if (!error && state_ == ConnectedState){
-        if (writeDataed(bytes_transferred)) return;
-    }
-    state_ = UnconnectedState;
-    erro_site = WriteEorro;
-    if (socket_->is_open()) {
-        socket_->close(erro_code);
-    }
-    erro_code = error;
-#ifdef ASIO_HAS_BOOST_DATE_TIME
-    if (timer != nullptr)
-        timer->cancel();
-#endif
-    haveErro();
-}
-
-void QAsioTcpSocketParent::resolverHandle(const asio::error_code &error,asio::ip::tcp::resolver::iterator iterator)
-{
-    if (!error) {
-        if (socket_ == nullptr) {
-            socket_ = new asio::ip::tcp::socket(IOServerThread::getIOThread()->getIOServer());
-        }
-        if (data_ != nullptr) {
-            asio::async_connect(*socket_,iterator,
-                                std::bind(&QAsioTcpSocketParent::connectedHandler,this,std::placeholders::_1,std::placeholders::_2));
-            finedHosted();
-        } else {
-            state_ = UnconnectedState;
-        }
-    } else {
-        state_ = UnconnectedState;
-        erro_site = FindHostError;
-        erro_code = error;
-#ifdef ASIO_HAS_BOOST_DATE_TIME
-        if (timer != nullptr)
-            timer->cancel();
-#endif
-        haveErro();
-    }
-}
-
-void QAsioTcpSocketParent::connectToHost(const asio::ip::tcp::endpoint & peerPoint)
-{
-    if (resolver_ == nullptr)
-        resolver_ = new asio::ip::tcp::resolver(socket_->get_io_service());
-    resolver_->async_resolve(peerPoint,
-                             std::bind(&QAsioTcpSocketParent::resolverHandle,this,std::placeholders::_1,std::placeholders::_2));
-    state_ = ConnectingState;
-    emit stateChange(ConnectingState);
+    (*p)->setQPoint(0);
+    delete p;
 }
 
 void QAsioTcpSocketParent::connectToHost(const QString & hostName, quint16 port)
 {
-    if (resolver_ == nullptr)
-        resolver_ = new asio::ip::tcp::resolver(socket_->get_io_service());
-    resolver_->async_resolve(asio::ip::tcp::resolver::query(hostName.toStdString(),QString::number(port).toStdString()),
-                             std::bind(&QAsioTcpSocketParent::resolverHandle,this,std::placeholders::_1,std::placeholders::_2));
-    state_ = ConnectingState;
+    (*p)->connectToHost(hostName,port);
     emit stateChange(ConnectingState);
-}
-
-void QAsioTcpSocketParent::connectedHandler(const asio::error_code &error,asio::ip::tcp::resolver::iterator iterator)
-{
-    if (!error) {
-        state_ = ConnectedState;
-        erro_site = NoError;
-        socket_->async_read_some(asio::buffer(data_,/*data_.max_size()*/byteSize_),
-                                 std::bind(&QAsioTcpSocketParent::readHandler,this,std::placeholders::_1,std::placeholders::_2));
-        this->peerPoint = socket_->remote_endpoint(erro_code);
-        hostConnected();
-#ifdef ASIO_HAS_BOOST_DATE_TIME
-        if (timer != nullptr)
-            timer->async_wait(std::bind(&QAsioTcpSocketParent::heartTimeOutHandler,this,std::placeholders::_1));
-#endif
-    } else {
-        asio::ip::tcp::resolver::iterator end;
-        if(iterator == end)
-        {
-            state_ = UnconnectedState;
-            erro_site = ConnectEorro;
-            if (socket_->is_open()) {
-                socket_->close(erro_code);
-            }
-            erro_code = error;
-#ifdef ASIO_HAS_BOOST_DATE_TIME
-            if (timer != nullptr)
-                timer->cancel();
-#endif
-            haveErro();
-        }
-    }
 }
 
 void QAsioTcpSocketParent::disconnectFromHost()
 {
-#ifdef ASIO_HAS_BOOST_DATE_TIME
-    if (timer != nullptr)
-        timer->cancel();
-#endif
-    if (state_ == UnconnectedState) return;
-    socket_->shutdown(asio::ip::tcp::socket::shutdown_both);
+    (*p)->disconnectFromHost();
 }
 
+int QAsioTcpSocketParent::socketDescriptor() const
+{
+    return (*p)->socketDescriptor();
+}
 
+int QAsioTcpSocketParent::error() const
+{
+    return (*p)->erro_code.value();
+}
+
+void QAsioTcpSocketParent::setHeartTimeOut(int /*s*/)
+{
+    this->timeOut_s = 0;
+}
+
+void QAsioTcpSocketParent::wirteData(const char * data,std::size_t size)
+{
+    (*p)->wirteData(data,size);
+}
+
+QAsioTcpSocketParent::SocketState QAsioTcpSocketParent::state() const
+{
+    return (*p)->state_;
+}
+
+QAsioTcpSocketParent::SocketErroSite QAsioTcpSocketParent::erroSite() const
+{
+    return (*p)->erro_site;
+}
+
+QString QAsioTcpSocketParent::getPeerIp() const
+{
+    return (*p)->peerIp;
+}
+
+qint16 QAsioTcpSocketParent::getPeerPort() const
+{
+    return (*p)->peerPort;
+}

@@ -7,8 +7,8 @@
 #endif
 
 
-#include "qasiotcpserver.h"
-#include "qasiotcpsocket.h"
+#include "../include/qasiotcpserver.h"
+#include "../include/qasiotcpsocket.h"
 #include <QCoreApplication>
 
 //asio事件循环线程与server主线程有新连接交互的事件
@@ -26,8 +26,8 @@ private:
 
 const QEvent::Type QAsioNewEvent::QAsioNewEventType = (QEvent::Type)QEvent::registerEventType();
 
-QAsioTcpServer::QAsioTcpServer(int threadSize, int readSize, QObject *parent) :
-    QAsioTcpServerParent(threadSize,parent),byteSize(readSize)
+QAsioTcpServer::QAsioTcpServer(int readSize,int ThreadSize, QObject *parent) :
+    QAsioTcpServerParent(ThreadSize,parent),byteSize(readSize)
 {}
 
 QAsioTcpServer::~QAsioTcpServer()
@@ -44,6 +44,7 @@ void QAsioTcpServer::customEvent(QEvent *e)
             emit newConnection(socket);;
         } else {
             delete socket;
+            socket = 0;
         }
         e->accept();
     } else {
@@ -51,14 +52,18 @@ void QAsioTcpServer::customEvent(QEvent *e)
     }
 }
 
-void QAsioTcpServer::incomingConnection(asio::ip::tcp::socket *socket)
+void QAsioTcpServer::incomingConnection()
 {
-    QAsioTcpSocket * asiosocket = new QAsioTcpSocket(socket,byteSize);
-    asiosocket->moveToThread(this->thread());
-    QCoreApplication::postEvent(this,new QAsioNewEvent(asiosocket),Qt::HighEventPriority);
+    QAsioTcpSocket * asiosocket = new QAsioTcpSocket(byteSize);
+    if (setNewSocket(asiosocket)) {
+        asiosocket->moveToThread(this->thread());
+        QCoreApplication::postEvent(this,new QAsioNewEvent(asiosocket),Qt::HighEventPriority);
+    } else {
+        delete asiosocket;
+    }
 }
 
-bool QAsioTcpServer::haveErro(const asio::error_code & /*code*/)
+bool QAsioTcpServer::haveErro()
 {
     return true;
 }

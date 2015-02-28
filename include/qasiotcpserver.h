@@ -10,22 +10,23 @@
 #ifndef QASIOTCPSERVER_H
 #define QASIOTCPSERVER_H
 
+#include <QObject>
 #include "qasiotcpserverparent.h"
 
 class QAsioTcpSocket;
 
 /// @brief TcpServer的简单封装
 /// @note 这是最自由化的版本，server不管理链接过来的链接，后续会增加管理的便捷类
-class QASIOSOCKET_LIBRARY QAsioTcpServer : public QAsioTcpServerParent
+class QASIOSOCKET_EXPORT QAsioTcpServer : public QAsioTcpServerParent
 {
     Q_OBJECT
 public:
 
     /// @brief 构造函数
-    /// @param threadSize服务端开启的asio::io_service的数目
+    /// @param threadSize服务端开启
     /// @note 当threadSize<=0 时，默认是开启两个
     /// @param parent父对象指针，Qt父子关系对象的父对象
-    explicit QAsioTcpServer(int threadSize = -1,int readSize = 4096,QObject *parent = 0);
+    explicit QAsioTcpServer(int readSize = 4096, int ThreadSize = 2, QObject *parent = 0);
 
     /// @brief 析构函数
     virtual ~QAsioTcpServer();
@@ -38,8 +39,8 @@ signals:
     void newConnection(QAsioTcpSocket * socket);
 
 protected:
-    void incomingConnection(asio::ip::tcp::socket * socket);
-    bool haveErro(const asio::error_code &);
+    void incomingConnection();
+    bool haveErro();
 protected:
     //自定义事件的处理，与asio事件循环线程发过来的事件的处理
     void customEvent(QEvent * e);

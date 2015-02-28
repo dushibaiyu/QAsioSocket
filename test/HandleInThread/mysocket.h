@@ -20,10 +20,6 @@ protected:
     virtual void readDataed(const char * data,std::size_t bytes_transferred);
     virtual bool writeDataed(std::size_t bytes_transferred);
     virtual void finedHosted();
-protected:
-    MySocket(asio::ip::tcp::socket * socket ,int size = 4096, QObject *parent = 0);
-    friend class MyServer;
-
 private:
     QQueue<QByteArray> writeQueue;
 private:

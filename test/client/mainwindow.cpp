@@ -56,6 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    qDebug() << "MainWindow::~MainWindow()";
     delete ui;
     delete socket;
 }
@@ -94,10 +95,10 @@ void MainWindow::on_pushSent_clicked()
     ui->textEdit->append(tr("Say：%1").arg(data));
 }
 
-void MainWindow::readError(QAsioTcpSocket::SocketErroSite & site,const asio::error_code & erro_code)
+void MainWindow::readError(QAsioTcpSocket::SocketErroSite  site, int erro_code)
 {
     ui->pushConnect->setText("连接");
-    ui->textEdit->append(tr("连接出错：%1 : %2").arg(static_cast<int>(site)).arg(erro_code.value()));
+    ui->textEdit->append(tr("连接出错：%1 : %2").arg(static_cast<int>(site)).arg(erro_code));
     ui->pushSent->setEnabled(false);
     ui->pushConnect->setEnabled(true);
     this->ui->txtIp->setEnabled(true);

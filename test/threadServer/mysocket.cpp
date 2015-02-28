@@ -1,9 +1,10 @@
 ﻿#include "mysocket.h"
 #include <QTime>
 #include <QDebug>
+#include <QThread>
 
-MySocket::MySocket(asio::ip::tcp::socket *socket, int size, QObject *parent) :
-    QAsioTcpSocket(socket,size,parent)
+MySocket::MySocket(int size, QObject *parent) :
+    QAsioTcpSocket(size,parent)
 {
     connect(this,&MySocket::readReadly,this,&MySocket::HandleData);
     connect(this,&MySocket::disconnected,this,&MySocket::HandleDisCon);

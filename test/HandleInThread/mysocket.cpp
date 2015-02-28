@@ -1,15 +1,10 @@
 ﻿#include "mysocket.h"
 #include <QDebug>
 #include <QTime>
+#include <QThread>
 
 MySocket::MySocket(int size, QObject *parent) : QAsioTcpSocketParent(size,parent)
 {}
-
-MySocket::MySocket(asio::ip::tcp::socket * socket ,int size,  QObject *parent)
-    : QAsioTcpSocketParent(socket,size,parent)
-{
-
-}
 
 MySocket::~MySocket()
 {

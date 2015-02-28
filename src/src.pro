@@ -1,10 +1,16 @@
 QT       += core
 
 TEMPLATE = lib
-DEFINES += QASIOSOCKET_LIBRARY=Q_CORE_EXPORT
+DEFINES += QASIOSOCKET_LIBRARY
 
-DESTDIR   = $${PWD}/../lib
+DEFINES += _WIN32_WINNT=0x0501
 
-TARGET  = $$qtLibraryTarget(QSsh)
+DESTDIR   = $$PWD/../lib
 
-include(AsioTcp.pri)
+TARGET  = $$qtLibraryTarget(QAsioSocket)
+
+include($$PWD/../QAsioSocket.pri)
+
+INCLUDEPATH += C:/local/boost_1_57_0
+DEPENDPATH += C:/local/boost_1_57_0
+

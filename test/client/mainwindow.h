@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QtCore>
-#include "qasiotcpsocket.h"
+#include <qasiotcpsocket.h>
 
 namespace Ui {
 class MainWindow;
@@ -18,7 +18,7 @@ public:
     ~MainWindow();
 
 public slots:
-    void readError(QAsioTcpSocket::SocketErroSite & site,const asio::error_code & erro_code);
+    void readError(QAsioTcpSocketParent::SocketErroSite site, int  erro_code);
 
     void on_pushSent_clicked();
     void on_pushConnect_clicked();

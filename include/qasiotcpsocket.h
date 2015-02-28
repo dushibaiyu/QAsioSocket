@@ -10,6 +10,7 @@
 #ifndef QASIOTCPSOCKET_H
 #define QASIOTCPSOCKET_H
 
+#include <QObject>
 #include <QBuffer>
 #include <QMutex>
 #include <QMutexLocker>
@@ -19,7 +20,7 @@
 class QAsioTcpServer;
 
 /// @brief TcpSocket的封装,接口按照QTcpsocket的设计的
-class QASIOSOCKET_LIBRARY QAsioTcpSocket : public QAsioTcpSocketParent
+class QASIOSOCKET_EXPORT QAsioTcpSocket : public QAsioTcpSocketParent
 {
     Q_OBJECT
 public:
@@ -44,7 +45,7 @@ signals:
     /// @brief Signal 信号：发生错误信号
     /// @param site 发生错误的位置
     /// @param erro_code 错误码
-    void sentError(SocketErroSite & site,const asio::error_code & erro_code);
+    void sentError(SocketErroSite site,int erro_code);
 
     /// @brief Signal 信号：解析主机成功的信号
     void hostFound();
@@ -101,11 +102,6 @@ public:
     bool disconnecdDeleteBuffer() const {return isDisconDelData;}
 
 protected:
-    /// @brief 直接赋给asio::ip::tcp::socket的构造函数，为保护，只支持QAsioTcpServer调用
-    QAsioTcpSocket(asio::ip::tcp::socket * socket ,int bytesize = 4096, QObject *parent = 0);//server类才能访问
-
-    friend class QAsioTcpServer;
-protected:
     virtual void haveErro();
     virtual void hostConnected();
     virtual void readDataed(const char * data,std::size_t bytes_transferred);
@@ -123,8 +119,7 @@ private:
     //接受数据的buffer和buffr锁
     QBuffer buffer;
     QMutex bufferMutex;
-    bool isDisconDelData = false;
-
+    bool isDisconDelData;
     Q_DISABLE_COPY(QAsioTcpSocket)
 };
 

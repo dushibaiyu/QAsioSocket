@@ -9,8 +9,8 @@
 #include <QDebug>
 
 
-ThreadServer::ThreadServer(int threadsize,int asioThread ,QObject *parent)
-    : QAsioTcpServer(threadsize,asioThread,parent)
+ThreadServer::ThreadServer(int threadsize,QObject *parent)
+    : QAsioTcpServer(4096,0,parent)
 {
     qDebug() << "Main Thread Id :" << QThread::currentThreadId();
     handler.initThreadType(ThreadHandle::THREADSIZE,threadsize);
@@ -21,13 +21,16 @@ ThreadServer::~ThreadServer()
 }
 
 
-void ThreadServer::incomingConnection(asio::ip::tcp::socket *socket)
+void ThreadServer::incomingConnection()
 {
-    MySocket * soc = new MySocket(socket);
-    soc->moveToThread(handler.getThread());
-    QObject::connect(soc,&MySocket::sentDiscon,this,&ThreadServer::removeThread);
-    qDebug() << "New Connect Id:" << soc->socketDescriptor() << "\t\t"
-             << "in Thread :" << QThread::currentThreadId();
+    MySocket * soc = new MySocket();
+    if (setNewSocket(soc)) {
+        soc->moveToThread(handler.getThread());
+        QObject::connect(soc,&MySocket::sentDiscon,this,&ThreadServer::removeThread);
+        qDebug() << "New Connect Id:" << soc->socketDescriptor() << "\t\t"
+                 << "in Thread :" << QThread::currentThreadId();
+    } else
+        delete soc;
 }
 
 void ThreadServer::removeThread(QThread * thread)

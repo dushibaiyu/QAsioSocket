@@ -18,7 +18,7 @@ public slots:
     void HandleData();
     void HandleDisCon();
 protected:
-    explicit MySocket(asio::ip::tcp::socket * socket, int size = 4096, QObject *parent = 0);
+    explicit MySocket(int size = 4096, QObject *parent = 0);
     friend class ThreadServer;
     Q_DISABLE_COPY(MySocket)
 };
