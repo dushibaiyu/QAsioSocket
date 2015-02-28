@@ -8,6 +8,10 @@
 //typedef typename boost::asio::ip::tcp::socket TcpSocket;
 class QAsioTcpSocketParentPrivate;
 class QAsioTcpServerParentPrivate;
+namespace boost {
+    template<typename T>
+    class shared_ptr;
+}
 
 class QASIOSOCKET_EXPORT QAsioTcpSocketParent : public QObject
 {
@@ -95,7 +99,8 @@ private:
     QString peerIp;
     qint16 peerPort;
     int timeOut_s;
-    QAsioTcpSocketParentPrivate * p;
+//    QAsioTcpSocketParentPrivate * p;
+    boost::shared_ptr<QAsioTcpSocketParentPrivate> * p;
     friend class QAsioTcpSocketParentPrivate;
     friend class QAsioTcpServerParentPrivate;
     Q_DISABLE_COPY(QAsioTcpSocketParent)

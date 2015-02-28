@@ -14,7 +14,7 @@ CONFIG   -= app_bundle
 
 TEMPLATE = app
 
-#include(../../QAsioSocket.pri)
+include(../../QAsioSocket.pri)
 
 SOURCES += main.cpp \
     mysocket.cpp \

@@ -4,20 +4,21 @@
 #include "ioserverthread.h"
 #include "../include/qasiotcpsocketparent.h"
 #include <boost/bind/bind.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
-class QAsioTcpSocketParentPrivate
+class QAsioTcpSocketParentPrivate :
+        public boost::enable_shared_from_this<QAsioTcpSocketParentPrivate>,
+        private boost::noncopyable
 {
 public :
-    QAsioTcpSocketParentPrivate(QAsioTcpSocketParent * q,int byteSize);
+    QAsioTcpSocketParentPrivate(int byteSize);
     ~QAsioTcpSocketParentPrivate();
+    inline void setQPoint(QAsioTcpSocketParent * q){this->q = q;}
     inline bool setTcpSocket(boost::asio::ip::tcp::socket *socket) {
-        if (!data_) return false;
+        if (!data_ || !q) return false;
         if (socket_) {
-            if (socket_->is_open()) {
-                socket_->close(erro_code);
-            } else {
-                socket_->cancel(erro_code);
-            }
+            socket_->close(erro_code);
             delete socket_;
         }
         socket_ = socket;
@@ -29,12 +30,12 @@ public :
             q->peerIp = QString::fromStdString(peerPoint.address().to_string());
             q->peerPort = peerPoint.port();
             socket_->async_read_some(boost::asio::buffer(data_,byteSize_),
-                                     stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::readHandler,this,
+                                     stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::readHandler,shared_from_this(),
                                                  boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred)));
             q->state_ = QAsioTcpSocketParent::ConnectedState;
             if (timer) {
                 timer->cancel();
-                timer->async_wait(boost::bind(&QAsioTcpSocketParentPrivate::heartTimeOutHandler,this,boost::asio::placeholders::error));
+                timer->async_wait(boost::bind(&QAsioTcpSocketParentPrivate::heartTimeOutHandler,shared_from_this(),boost::asio::placeholders::error));
             }
         }
         return true;
@@ -42,7 +43,7 @@ public :
     inline  void wirteData(const char * data,std::size_t size) {
         if (socketDescriptor() != -1) {
             boost::asio::async_write(*socket_,boost::asio::buffer(data,size),
-                          stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::writeHandler,this,
+                          stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::writeHandler,shared_from_this(),
                                                    boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred)));
         }
     }
@@ -56,7 +57,8 @@ public :
         if (timer)
             timer->cancel();
         resolver_->async_resolve(boost::asio::ip::tcp::resolver::query(hostName.toStdString(),QString::number(port).toStdString()),
-                                 stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::resolverHandle,this, boost::asio::placeholders::error,boost::asio::placeholders::iterator)));
+                                 stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::resolverHandle,
+                                                          shared_from_this(), boost::asio::placeholders::error,boost::asio::placeholders::iterator)));
     }
 
     inline void disconnectFromHost() {
@@ -81,13 +83,14 @@ public :
                 delete timer;
                 timer = 0;
             }
-            if (!q->timeOut_s){
+            if (q && !q->timeOut_s){
                 return;
             }
             if (socket_) {
                 timer = new boost::asio::deadline_timer(IOServerThread::getIOThread().getIoServer(),boost::posix_time::seconds(q->timeOut_s));
-                if (q->state_ == QAsioTcpSocketParent::ConnectedState)
-                  timer->async_wait(boost::bind(&QAsioTcpSocketParentPrivate::heartTimeOutHandler,this,boost::asio::placeholders::error));
+                if (q && q->state_ == QAsioTcpSocketParent::ConnectedState)
+                  timer->async_wait(boost::bind(&QAsioTcpSocketParentPrivate::heartTimeOutHandler,
+                                                shared_from_this(),boost::asio::placeholders::error));
             }
         }
 
