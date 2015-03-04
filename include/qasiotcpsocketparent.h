@@ -2,10 +2,8 @@
 #define QASIOTCPSOCKETPARENT_H
 
 #include <QObject>
-//#include <QAtomicInt>
 #include "qasiosocket.h"
 
-//typedef typename boost::asio::ip::tcp::socket TcpSocket;
 class QAsioTcpSocketParentPrivate;
 class QAsioTcpServerParentPrivate;
 namespace boost {
@@ -93,7 +91,6 @@ protected:
     void wirteData(const char * data,std::size_t size);
 
 private:
-//    QAsioTcpSocketParentPrivate * p;
     boost::shared_ptr<QAsioTcpSocketParentPrivate> * p;
     friend class QAsioTcpSocketParentPrivate;
     friend class QAsioTcpServerParentPrivate;
