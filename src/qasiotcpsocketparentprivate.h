@@ -123,11 +123,13 @@ protected:
         peerIp.clear();
         peerPort = 0;
         erro_code = erro;
-        if (timer)
-            timer->cancel();
         if (q) {
             q->haveErro();
         }
+        if (timer)
+            timer->expires_from_now(boost::posix_time::pos_infin);
+        if (socket_)
+            socket_->close();
     }
 
 private:
