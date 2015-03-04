@@ -63,7 +63,7 @@ public :
 
     inline void disconnectFromHost() {
         if (timer)
-            timer->cancel();
+            timer->expires_from_now(boost::posix_time::pos_infin);
         if (state_ == QAsioTcpSocketParent::UnconnectedState) return;
         if (socket_)
             socket_->shutdown(boost::asio::ip::tcp::socket::shutdown_both,erro_code);
@@ -79,27 +79,31 @@ public :
     }
 
     inline void setHeartTimeOut() {
-            if (timer) {
-                timer->cancel();
-                delete timer;
-                timer = 0;
-            }
-            if (q && !q->timeOut_s){
+            if (q){
                 return;
             }
-            if (socket_) {
-                timer = new boost::asio::deadline_timer(IOServerThread::getIOThread().getIoServer(),boost::posix_time::seconds(q->timeOut_s));
-                if (state_ == QAsioTcpSocketParent::ConnectedState)
-                  timer->async_wait(boost::bind(&QAsioTcpSocketParentPrivate::heartTimeOutHandler,
-                                                shared_from_this(),boost::asio::placeholders::error));
+            if (timeOut_s <= 0) {
+                if (timer) {
+                    timer->expires_from_now(boost::posix_time::pos_infin);
+                }
+                return;
             }
-        }
+            if (!timer) {
+                timer = new boost::asio::deadline_timer(IOServerThread::getIOThread().getIoServer());
+                timer->async_wait(boost::bind(&QAsioTcpSocketParentPrivate::heartTimeOutHandler,
+                                              shared_from_this(),boost::asio::placeholders::error));
+            }
+            if (state_ == QAsioTcpSocketParent::ConnectedState)
+                timer->expires_from_now(boost::posix_time::seconds(timeOut_s));
+    }
 
     boost::system::error_code erro_code;
     QAsioTcpSocketParent::SocketState state_;
     QAsioTcpSocketParent::SocketErroSite erro_site;
     QString peerIp;
     qint16 peerPort;
+
+    int timeOut_s;
 protected:
     // 数据读取的回调函数
     void readHandler(const boost::system::error_code& error, std::size_t bytes_transferred);

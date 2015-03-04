@@ -17,6 +17,7 @@ QAsioTcpSocketParentPrivate::QAsioTcpSocketParentPrivate(int byteSize) :
     state_ = QAsioTcpSocketParent::UnconnectedState;
     erro_site = QAsioTcpSocketParent::ReadError;
     peerPort = 0;
+    timeOut_s = 0;
 }
 
 QAsioTcpSocketParentPrivate::~QAsioTcpSocketParentPrivate()
@@ -47,9 +48,8 @@ void QAsioTcpSocketParentPrivate::readHandler(const boost::system::error_code& e
             socket_->async_read_some(boost::asio::buffer(data_,byteSize_),
                                      stand_->wrap(boost::bind(&QAsioTcpSocketParentPrivate::readHandler,shared_from_this(),
                                                               boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred)));
-            if (timer) {
-                timer->cancel();
-                timer->async_wait(boost::bind(&QAsioTcpSocketParentPrivate::heartTimeOutHandler,this,boost::asio::placeholders::error));
+            if (timer && (timeOut_s > 0 )) {
+                timer->expires_from_now(boost::posix_time::seconds(timeOut_s));
             }
         }
 
@@ -113,8 +113,11 @@ void QAsioTcpSocketParentPrivate::connectedHandler(const boost::system::error_co
 }
 
 void QAsioTcpSocketParentPrivate::heartTimeOutHandler(const boost::system::error_code & error) {
-    if (!error && q) {
-        q->heartTimeOut(q->timeOut_s);
+    if (!error && (state_ == QAsioTcpSocketParent::ConnectedState) && (timeOut_s > 0) && q) {
+        q->heartTimeOut(timeOut_s);
+        timer->expires_from_now(boost::posix_time::seconds(timeOut_s));
+    } else {
+        timer->expires_from_now(boost::posix_time::pos_infin);
     }
     timer->async_wait(boost::bind(&QAsioTcpSocketParentPrivate::heartTimeOutHandler,
                                   shared_from_this(),boost::asio::placeholders::error));
@@ -122,7 +125,7 @@ void QAsioTcpSocketParentPrivate::heartTimeOutHandler(const boost::system::error
 
 
 QAsioTcpSocketParent::QAsioTcpSocketParent(int byteSize, QObject *parent) :
-    QObject(parent),timeOut_s(0)
+    QObject(parent)
 {
     QAsioTcpSocketParentPrivate * tp = new QAsioTcpSocketParentPrivate(byteSize);
     tp->setQPoint(this);
@@ -158,9 +161,8 @@ int QAsioTcpSocketParent::error() const
 
 void QAsioTcpSocketParent::setHeartTimeOut(int s)
 {
-    this->timeOut_s = s;
-    if (this->timeOut_s <= 0) this->timeOut_s = 0;
-    else if (this->timeOut_s < 10) this->timeOut_s = 10;
+    if (s <= 0) (*p)->timeOut_s = 0;
+    else if (s < 10) (*p)->timeOut_s = 10;
     (*p)->setHeartTimeOut();
 }
 
@@ -187,4 +189,9 @@ QString QAsioTcpSocketParent::getPeerIp() const
 qint16 QAsioTcpSocketParent::getPeerPort() const
 {
     return (*p)->peerPort;
+}
+
+int QAsioTcpSocketParent::getHeartTimeOut() const
+{
+    return (*p)->timeOut_s;
 }

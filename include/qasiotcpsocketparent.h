@@ -79,8 +79,7 @@ public:
     QString getPeerIp() const ;
     qint16 getPeerPort() const ;
     void setHeartTimeOut(int s);
-
-    int getHeartTimeOut() const {return timeOut_s;}
+    int getHeartTimeOut() const;
 
 protected:
     virtual void haveErro() = 0;
@@ -94,7 +93,6 @@ protected:
     void wirteData(const char * data,std::size_t size);
 
 private:
-    int timeOut_s;
 //    QAsioTcpSocketParentPrivate * p;
     boost::shared_ptr<QAsioTcpSocketParentPrivate> * p;
     friend class QAsioTcpSocketParentPrivate;
