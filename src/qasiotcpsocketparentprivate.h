@@ -93,6 +93,8 @@ protected:
         if (q) {
             q->haveErro();
         }
+        if (socket_)
+            socket_->close();
     }
 
 private:
