@@ -79,6 +79,7 @@ public:
     void setHeartTimeOut(int s);
     int getHeartTimeOut() const;
 
+
 protected:
     virtual void haveErro() = 0;
     virtual void hostConnected() = 0;
@@ -89,7 +90,7 @@ protected:
 
 protected:
     void wirteData(const char * data,std::size_t size);
-
+    void willDelete();
 private:
     boost::shared_ptr<QAsioTcpSocketParentPrivate> * p;
     friend class QAsioTcpSocketParentPrivate;

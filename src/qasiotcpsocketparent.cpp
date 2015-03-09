@@ -195,3 +195,8 @@ int QAsioTcpSocketParent::getHeartTimeOut() const
 {
     return (*p)->timeOut_s;
 }
+
+void QAsioTcpSocketParent::willDelete()
+{
+    (*p)->setQPoint(0);
+}
