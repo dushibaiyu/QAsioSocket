@@ -2,16 +2,22 @@
 #define QASIOSOCKET_H
 #include <QtGlobal>
 
-#if defined(QASIOSOCKET_LIBRARY)
 
-#if defined(QASIOSOCKET_STATIC)
+#if  defined(QASIOSOCKET_NOLIB)
+
+#define QASIOSOCKET_EXPORT
+
+#elif defined(QASIOSOCKET_LIBRARY)
+
+#define QASIOSOCKET_EXPORT Q_DECL_EXPORT
+
+#else
+
 #define QASIOSOCKET_EXPORT Q_DECL_IMPORT
-#else
-#  define QASIOSOCKET_EXPORT Q_DECL_EXPORT
+
 #endif
 
-#else
-#  define QASIOSOCKET_EXPORT
-#endif
+
+//#define QASIOSOCKET_EXPORT Q_CORE_EXPORT
 
 #endif

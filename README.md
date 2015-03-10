@@ -1,20 +1,21 @@
-# QAsioSocket
+# QAsioTcpSocket
 把asio的tcp操作封装成类似QTCpserver的操作。
 
 *********
-基本现在已经可用。
 使用方法：
-    1.把QAsioSocket目录拷贝到您源码目录。
-    2.在pro文件中包含include(QAsioSocket/QAsioSocket.pri)即可
+    1.Build:
+        直接用Qt-Creator 打开项目（QAsioSocket.pro），然后打开src.pro文件.
+        然后编译，生成的动态库在lib文件夹下，头文件就是include文件夹下的。
+    2.直接使用源码：（请注意协议,源码协议LGPL V2.1+）
+        把代码复制到您的项目目录下去。
+        在pro文件中包含include(QAsioSocket/QAsioSocket.pri)，
+        添加宏定义 DEFINES += QASIOSOCKET_NOLIB 到您的pro文件。
     
 **************************************
-    支持C++11的编译器，Qt5.x版本。
-        windows： vs2013
-        linux ： gcc
-
-    源码协议boost1.0
-
-    现在里面包含的asio版本为1.10.2，不依赖boost，需要C++11支持
+环境依赖
+    依赖库：Qt 5.x版本
+    windows： vs2013 +
+    linux ： gcc
 
 ***************************************
 

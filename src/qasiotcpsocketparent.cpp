@@ -116,8 +116,13 @@ QAsioTcpSocketParent::QAsioTcpSocketParent(int byteSize, QObject *parent) :
 
 QAsioTcpSocketParent::~QAsioTcpSocketParent()
 {
-    (*p)->setQPoint(0);
+    willDelete();
     delete p;
+}
+
+void QAsioTcpSocketParent::willDelete()
+{
+    (*p)->setQPoint(0);
 }
 
 void QAsioTcpSocketParent::connectToHost(const QString & hostName, quint16 port)

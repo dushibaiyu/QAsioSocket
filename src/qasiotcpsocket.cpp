@@ -55,7 +55,9 @@ QAsioTcpSocket::QAsioTcpSocket(int bytesize, QObject *parent) :
 {}
 
 QAsioTcpSocket::~QAsioTcpSocket()
-{}
+{
+    willDelete();
+}
 
 bool QAsioTcpSocket::write(const QByteArray &data)
 {

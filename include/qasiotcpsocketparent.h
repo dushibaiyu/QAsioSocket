@@ -16,6 +16,9 @@ namespace std {
 class QASIOSOCKET_EXPORT QAsioTcpSocketParent : public QObject
 {
     Q_OBJECT
+
+    friend class QAsioTcpSocketParentPrivate;
+    friend class QAsioTcpServerParentPrivate;
 public:
     explicit QAsioTcpSocketParent(int byteSize = 4096,QObject *parent = 0);
     virtual ~QAsioTcpSocketParent();
@@ -92,12 +95,12 @@ protected:
 
 protected:
     void wirteData(const char * data,std::size_t size);
-
+    void willDelete();
 private:
     int timeOut_s;
+
     std::shared_ptr<QAsioTcpSocketParentPrivate> * p;
-    friend class QAsioTcpSocketParentPrivate;
-    friend class QAsioTcpServerParentPrivate;
+
     Q_DISABLE_COPY(QAsioTcpSocketParent)
 };
 
