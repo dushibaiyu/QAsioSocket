@@ -2,20 +2,23 @@
 把asio的tcp操作封装成类似QTCpserver的操作。
 
 *********
-基本现在已经可用。
 使用方法：
-    1.把QAsioSocket目录拷贝到您源码目录。
-    2.在pro文件中包含include(QAsioSocket/QAsioSocket.pri)
-    3.在你的项目中链接boost_system,boost_thread,boost_datetime库
-
-    动态库加载方式正在测试。
+    1.Build:
+        直接用Qt-Creator 打开项目（QAsioSocket.pro），然后打开src.pro文件.
+        编辑其中引用的boost库的名字和路径,和添加的boost的源码路径。
+        使其和您的环境一样。然后编译，生成的动态库在lib文件夹下，头文件就是include文件夹下的。
+    2.直接使用源码：（请注意协议,源码协议LGPL V2.1+）
+        把代码复制到您的项目目录下去。
+        在pro文件中包含include(QAsioSocket/QAsioSocket.pri)，
+        添加宏定义 DEFINES += QASIOSOCKET_NOLIB 到您的pro文件。
+        添加的boost的源码路径。
+        在你的项目中链接boost_system,boost_thread,boost_datetime库。
     
 **************************************
-    Boost，Qt5.x版本 依赖。
-        windows： vs2010 +
-        linux ： gcc
-
-    源码协议boost1.0
+环境依赖
+    依赖库：Qt 5.x版本，boost的system，thread，datetime，asio。
+    windows： vs2010 +
+    linux ： gcc
 
 ***************************************
 
@@ -33,9 +36,10 @@
         
 ************************************
 TODO:
-1.添加UDP和ICMP封装
-2.测试动态库问题。
-3.考虑TCPSSL添加
+1.封装websocket。（进行中，在dev分支）
+2.添加UDP和ICMP封装
+3.测试动态库问题。
+4.考虑SSL添加
         
 *************************************************
-        分支onlyasio是不依赖boost，但是全部用C++11实现的版本。
+        分支onlyasio是不依赖boost，全部用C++11实现的版本。

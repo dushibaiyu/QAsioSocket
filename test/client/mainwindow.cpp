@@ -95,7 +95,7 @@ void MainWindow::on_pushSent_clicked()
     ui->textEdit->append(tr("Say：%1").arg(data));
 }
 
-void MainWindow::readError(QAsioTcpSocket::SocketErroSite & site, int erro_code)
+void MainWindow::readError(QAsioTcpSocket::SocketErroSite site, int erro_code)
 {
     ui->pushConnect->setText("连接");
     ui->textEdit->append(tr("连接出错：%1 : %2").arg(static_cast<int>(site)).arg(erro_code));

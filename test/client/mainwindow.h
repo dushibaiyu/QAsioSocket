@@ -18,7 +18,7 @@ public:
     ~MainWindow();
 
 public slots:
-    void readError(QAsioTcpSocket::SocketErroSite & site,int  erro_code);
+    void readError(QAsioTcpSocketParent::SocketErroSite site, int  erro_code);
 
     void on_pushSent_clicked();
     void on_pushConnect_clicked();

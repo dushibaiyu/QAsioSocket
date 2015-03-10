@@ -10,6 +10,8 @@ class QAsioTcpServerParentPrivate;
 class QASIOSOCKET_EXPORT QAsioTcpServerParent : public QObject
 {
     Q_OBJECT
+
+    friend class QAsioTcpServerParentPrivate;
 public:
     explicit QAsioTcpServerParent(int threadSize, QObject *parent = 0);
     virtual ~QAsioTcpServerParent();
@@ -84,7 +86,6 @@ protected:
 
 private:
     QAsioTcpServerParentPrivate * p;
-    friend class QAsioTcpServerParentPrivate;
     qint16 port_;
     ListenType type_;
     QString ip_;
