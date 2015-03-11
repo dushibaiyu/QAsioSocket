@@ -42,3 +42,5 @@
         
 *************************************************
 ###分支onlyasio是不依赖boost，全部用C++11实现的版本。
+        注：主分支依赖boost，采用的是asio的单io_service多线程的方式。
+        onlyasio不依赖boost，但是需要编译器支持完整的C++11，采用的是asio的多io_service（一个io_service线程，一个io_service）模式。
