@@ -50,7 +50,7 @@ private:
 };
 
 //asio事件循环线程与server主线程有新连接交互的事件
-class QAsioNewEvent : public QEvent
+class QASIOSOCKET_EXPORT QAsioNewEvent : public QEvent
 {
 public:
     explicit QAsioNewEvent(QAsioTcpSocket * socket)

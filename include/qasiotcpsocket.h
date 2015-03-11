@@ -125,7 +125,7 @@ private:
     Q_DISABLE_COPY(QAsioTcpSocket)
 };
 
-class QAsioEvent : public QEvent
+class QASIOSOCKET_EXPORT QAsioEvent : public QEvent
 {
 public:
     enum ConnectedEvent{//socket事件代表的状态
