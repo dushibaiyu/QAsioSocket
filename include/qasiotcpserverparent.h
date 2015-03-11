@@ -82,6 +82,8 @@ protected:
     /// 此函数在asio的线程中执行，此线程无qt的事件循环的，注意资源保护
     virtual void incomingConnection() = 0;
 
+    /// @brief 当有新连接的时候，你需要手动新建一个asiotcpsocket链接，并把新连接连接到这个asiosocket上
+    /// @note 在incomingConnection()中调用，如果必须要调用此函数来获取链接
     bool setNewSocket(QAsioTcpSocketParent * socket);
 
 private:

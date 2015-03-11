@@ -15,6 +15,8 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <QQueue>
+#include <QEvent>
+#include <QVariant>
 #include "qasiotcpsocketparent.h"
 
 class QAsioTcpServer;
@@ -121,6 +123,45 @@ private:
     QMutex bufferMutex;
     bool isDisconDelData;
     Q_DISABLE_COPY(QAsioTcpSocket)
+};
+
+class QASIOSOCKET_EXPORT QAsioEvent : public QEvent
+{
+public:
+    enum ConnectedEvent{//socket事件代表的状态
+        Connected, //已连接
+        DisConnect,//断开链接
+        HaveEorro,//发现错误错误
+        ReadReadly, //数据可供读取
+        HostFined, //找到主机
+        HeartTimeOut //心跳时间到了，但是没有数据
+    };
+
+    /// @brief 默认构造函数
+    explicit QAsioEvent():QEvent(QAsioSocketEventType){}
+
+    /// @brief 构造函数，并传入需要携带的信息
+    /// @param ctype 事件代表的状态
+    /// @param code 如果是错误，错误信息是什么
+    QAsioEvent(ConnectedEvent ctype)
+        :QEvent(QAsioSocketEventType),cType_(ctype){}
+
+    /// @brief 设置事件代表的状态
+    /// @param ctype 事件代表的状态
+    void setSocketState(ConnectedEvent ctype){cType_ = ctype;}
+    void setData(const QVariant & data) {data_ = data;}
+
+    /// @brief 获取事件代表的状态
+    ConnectedEvent getConnectedType() const {return cType_;}
+
+    QVariant getData() const {return data_;}
+private:
+    ConnectedEvent cType_;
+    QVariant data_;
+public:
+    /// @brief 事件的类型
+    static const QEvent::Type QAsioSocketEventType;
+
 };
 
 #endif // QASIOTCPSOCKET_H

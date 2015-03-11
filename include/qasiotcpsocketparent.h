@@ -74,14 +74,21 @@ public:
     /// @brief 当前的链接状态
     SocketState state() const ;
 
+    /// @brief 获取错误位置
     SocketErroSite erroSite() const ;
 
-
+    /// @brief 获取链接另一端的IP
     QString getPeerIp() const ;
-    qint16 getPeerPort() const ;
-    void setHeartTimeOut(int s);
-    int getHeartTimeOut() const;
 
+    /// @brief 获取链接另一端的端口
+    qint16 getPeerPort() const ;
+
+    /// @brief 设置超时时间，如果小于10s或自动变为10s的、、设置等于或小于0，就是取消超时。
+    /// 计算方法是，此次接受的数据开始计时，如果在你设定的时间内没有新数据到来，就是超时，单位秒（s）
+    void setHeartTimeOut(int s);
+
+    /// @brief 获取超时时间，为0是未启用
+    int getHeartTimeOut() const;
 
 protected:
     virtual void haveErro() = 0;
@@ -95,6 +102,7 @@ protected:
     void wirteData(const char * data,std::size_t size);
     void willDelete();
 private:
+    //对引用计数指针还用其指针，不是好的习惯，但是为了让此库只是编译时需要boost的头文件，而使用时不需要，只有用此下策
     boost::shared_ptr<QAsioTcpSocketParentPrivate> * p;
 
     Q_DISABLE_COPY(QAsioTcpSocketParent)

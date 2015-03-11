@@ -127,9 +127,8 @@ void QAsioTcpSocketParentPrivate::heartTimeOutHandler(const boost::system::error
 QAsioTcpSocketParent::QAsioTcpSocketParent(int byteSize, QObject *parent) :
     QObject(parent)
 {
-    QAsioTcpSocketParentPrivate * tp = new QAsioTcpSocketParentPrivate(byteSize);
-    tp->setQPoint(this);
-    p = new boost::shared_ptr<QAsioTcpSocketParentPrivate>(tp);
+    p = new boost::shared_ptr<QAsioTcpSocketParentPrivate>(new QAsioTcpSocketParentPrivate(byteSize));
+    (*p)->setQPoint(this);
 }
 
 QAsioTcpSocketParent::~QAsioTcpSocketParent()
