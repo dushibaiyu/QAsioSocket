@@ -40,7 +40,7 @@ public:
 
     inline bool setNewSocket(QAsioTcpSocketParent * socket)
     {
-        bool istrue = (*(socket->p))->setTcpSocket(socket_);
+        bool istrue = (socket->p)->setTcpSocket(socket_);
         if (istrue) {
             socket_ = 0;
         }

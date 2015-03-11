@@ -107,43 +107,40 @@ void QAsioTcpSocketParentPrivate::connectedHandler(const asio::error_code& error
 
 
 QAsioTcpSocketParent::QAsioTcpSocketParent(int byteSize, QObject *parent) :
-    QObject(parent),timeOut_s(0)
+    QObject(parent),timeOut_s(0),p(new QAsioTcpSocketParentPrivate(byteSize))
 {
-    QAsioTcpSocketParentPrivate * tp = new QAsioTcpSocketParentPrivate(byteSize);
-    tp->setQPoint(this);
-    p = new std::shared_ptr<QAsioTcpSocketParentPrivate>(tp);
+    p->setQPoint(this);
 }
 
 QAsioTcpSocketParent::~QAsioTcpSocketParent()
 {
     willDelete();
-    delete p;
 }
 
 void QAsioTcpSocketParent::willDelete()
 {
-    (*p)->setQPoint(0);
+    p->setQPoint(0);
 }
 
 void QAsioTcpSocketParent::connectToHost(const QString & hostName, quint16 port)
 {
-    (*p)->connectToHost(hostName,port);
+    p->connectToHost(hostName,port);
     emit stateChange(ConnectingState);
 }
 
 void QAsioTcpSocketParent::disconnectFromHost()
 {
-    (*p)->disconnectFromHost();
+    p->disconnectFromHost();
 }
 
 int QAsioTcpSocketParent::socketDescriptor() const
 {
-    return (*p)->socketDescriptor();
+    return p->socketDescriptor();
 }
 
 int QAsioTcpSocketParent::error() const
 {
-    return (*p)->erro_code.value();
+    return p->erro_code.value();
 }
 
 void QAsioTcpSocketParent::setHeartTimeOut(int /*s*/)
@@ -153,25 +150,25 @@ void QAsioTcpSocketParent::setHeartTimeOut(int /*s*/)
 
 void QAsioTcpSocketParent::wirteData(const char * data,std::size_t size)
 {
-    (*p)->wirteData(data,size);
+    p->wirteData(data,size);
 }
 
 QAsioTcpSocketParent::SocketState QAsioTcpSocketParent::state() const
 {
-    return (*p)->state_;
+    return p->state_;
 }
 
 QAsioTcpSocketParent::SocketErroSite QAsioTcpSocketParent::erroSite() const
 {
-    return (*p)->erro_site;
+    return p->erro_site;
 }
 
 QString QAsioTcpSocketParent::getPeerIp() const
 {
-    return (*p)->peerIp;
+    return p->peerIp;
 }
 
 qint16 QAsioTcpSocketParent::getPeerPort() const
 {
-    return (*p)->peerPort;
+    return p->peerPort;
 }

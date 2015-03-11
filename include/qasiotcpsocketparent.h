@@ -2,7 +2,7 @@
 #define QASIOTCPSOCKETPARENT_H
 
 #include <QObject>
-//#include <QAtomicInt>
+#include <memory>
 #include "qasiosocket.h"
 
 //typedef typename boost::asio::ip::tcp::socket TcpSocket;
@@ -99,7 +99,7 @@ protected:
 private:
     int timeOut_s;
 
-    std::shared_ptr<QAsioTcpSocketParentPrivate> * p;
+    std::shared_ptr<QAsioTcpSocketParentPrivate> p;
 
     Q_DISABLE_COPY(QAsioTcpSocketParent)
 };

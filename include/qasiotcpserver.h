@@ -12,8 +12,7 @@
 
 #include <QObject>
 #include "qasiotcpserverparent.h"
-
-class QAsioTcpSocket;
+#include "../include/qasiotcpsocket.h"
 
 /// @brief TcpServer的简单封装
 /// @note 这是最自由化的版本，server不管理链接过来的链接，后续会增加管理的便捷类
@@ -48,6 +47,19 @@ protected:
 private:
     int byteSize;
     Q_DISABLE_COPY(QAsioTcpServer)
+};
+
+//asio事件循环线程与server主线程有新连接交互的事件
+class QAsioNewEvent : public QEvent
+{
+public:
+    explicit QAsioNewEvent(QAsioTcpSocket * socket)
+        :QEvent(QAsioNewEventType),socket_(socket){}
+    static const QEvent::Type QAsioNewEventType;// = (QEvent::Type)QEvent::registerEventType();
+
+    QAsioTcpSocket * getNewSocket() const {return socket_;}
+private:
+    QAsioTcpSocket * socket_;
 };
 
 #endif // QASIOTCPSERVER_H
