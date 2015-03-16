@@ -43,5 +43,6 @@ SOURCES += \
     qasiowebsocket.cpp \
     qasiowebsocketparent.cpp \
     qdefaultmaskgenerator_p.cpp \
-    qmaskgenerator.cpp
+    qmaskgenerator.cpp \
+    main.cpp
 
