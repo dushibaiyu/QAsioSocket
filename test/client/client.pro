@@ -20,6 +20,8 @@ HEADERS  += mainwindow.h
 
 FORMS    += mainwindow.ui
 
+#include($$PWD/../../QAsioSocket.pri)
+
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../lib/ -lQAsioSocket
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../lib/ -lQAsioSocketd
 else:unix: LIBS += -L$$PWD/../../lib/ -lQAsioSocket

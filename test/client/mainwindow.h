@@ -18,15 +18,18 @@ public:
     ~MainWindow();
 
 public slots:
-    void readError(QAsioTcpSocketParent::SocketErroSite site, int  erro_code);
+    void readError(const QString & erro);
 
     void on_pushSent_clicked();
     void on_pushConnect_clicked();
     void on_timeBut_clicked();
 
+    void connectdd();
+    void disconnectdd();
+    void readData(const QByteArray & data);
 private:
     Ui::MainWindow * ui;
-    QAsioTcpSocket * socket;
+    QAsioTcpsocket * socket;
     QTimer tm;
     QStringList list;
 };

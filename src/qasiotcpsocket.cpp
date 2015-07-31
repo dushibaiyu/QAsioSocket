@@ -1,150 +1,97 @@
-﻿#ifdef _MSC_VER
-#pragma execution_character_set("utf-8")
-#endif
+﻿#include "qasiotcpsocket.h"
+#include "qsocketconnection.h"
+#include <QMutex>
 
-//#include "qasioevent.h"
-#include "qasiotcpsocket.h"
-#include <QCoreApplication>
-#include <QDebug>
+static QMutex mut;
 
-const QEvent::Type QAsioEvent::QAsioSocketEventType = (QEvent::Type)QEvent::registerEventType();
+IOServiceClass * QAsioTcpsocket::ioserver = nullptr;
+volatile ulong QAsioTcpsocket::linkCout = 0;
 
-QAsioTcpSocket::QAsioTcpSocket(int bytesize, QObject *parent) :
-    QAsioTcpSocketParent(bytesize,parent),isDisconDelData(false)
-{}
-
-QAsioTcpSocket::~QAsioTcpSocket()
+QAsioTcpsocket::QAsioTcpsocket(size_t size,QObject *parent) :
+    TcpAbstractSocket(parent),serverBuild(false)
 {
-    willDelete();
+    mut.lock();
+    if (ioserver == nullptr) {
+        ioserver = new IOServiceClass();
+    }
+    ++ linkCout;
+    mut.unlock();
+    con_ = new Session(ioserver->getService(),size);
+    con_->connection->setQTcp(this);
 }
 
-bool QAsioTcpSocket::write(const QByteArray &data)
+QAsioTcpsocket::QAsioTcpsocket(Session * ses) :
+    TcpAbstractSocket(0),serverBuild(true),con_(ses)
 {
-    if (state() != ConnectedState)
-        return false;
-    writeMutex.lock();
-    if (!data.isEmpty())
-        writeQueue.append(data);
-    if (writeQueue.isEmpty()) {
-        writeMutex.unlock();
-        return false;
+    int soc = con_->connection->socketDescriptor();
+    if (soc != -1) {
+        setState(ConnectedState);
+        setSocketPtr(soc);
     }
-    if (writeQueue.size() == 1) {
-        wirteData(writeQueue.head().data(),static_cast<std::size_t>(writeQueue.head().size()));
-    }
-    writeMutex.unlock();
-    return true;
+    con_->connection->setQTcp(this);
 }
 
-void QAsioTcpSocket::customEvent(QEvent *event)
+QAsioTcpsocket::~QAsioTcpsocket()
 {
-    if (event->type() == QAsioEvent::QAsioSocketEventType)
-    {
-        QAsioEvent * e = static_cast<QAsioEvent*>(event);
-        switch (e->getConnectedType()) {
-        case QAsioEvent::ReadReadly :
-            if (isDisconDelData && state() != ConnectedState) break;
-            emit readReadly();
-            break;
-        case QAsioEvent::Connected :
-            emit stateChange(ConnectedState);
-            emit connected();
-            break;
-        case QAsioEvent::HaveEorro :
-            emit sentError(erroSite(),error());
-            emit stateChange(UnconnectedState);
-            emit disconnected();
-            break;
-        case QAsioEvent::DisConnect :
-            emit stateChange(UnconnectedState);
-            emit disconnected();
-            break;
-        case QAsioEvent::HostFined :
-            emit hostFound();
-            break;
-        case QAsioEvent::HeartTimeOut:
-            emit heartTimeOuted(e->getData().toInt());
-            break;
-        default:
-            break;
+    con_->connection->setQTcp(nullptr);
+    delete con_;
+    if (!serverBuild) {
+        mut.lock();
+        -- linkCout;
+        if (linkCout == 0) {
+            delete ioserver;
         }
-        e->accept();
-    } else {
-        QObject::customEvent(event);
+        mut.unlock();
     }
 }
 
-void QAsioTcpSocket::haveErro()
+void QAsioTcpsocket::do_start()
 {
-    switch (erroSite()) {
-    case NoError:
-        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::DisConnect),Qt::HighEventPriority);
-        break;
-    case ReadError:
-    case WriteEorro:
-        if (error() == 2) {
-            QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::DisConnect),Qt::HighEventPriority);
-            break;
-        }
-    default:
-        QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::HaveEorro),Qt::HighEventPriority);
-    }
-    if (isDisconDelData) {
-        bufferMutex.lock();
-        if (buffer.isOpen())
-            buffer.close();
-        bufferMutex.unlock();
+    if (serverBuild) {
+        con_->connection->do_read();
     }
 }
 
-void QAsioTcpSocket::hostConnected()
+void QAsioTcpsocket::hostConnected()
 {
-    qDebug() << this << "  QAsioTcpSocket::hostConnected() peerIp:" << getPeerIp() << "  peerPort:" << getPeerPort();
-
-    QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::Connected));
+    setState(ConnectedState);
+    emit connected();
+    emit stateChange(state());
+    con_->connection->do_read();
 }
 
-void QAsioTcpSocket::readDataed(const char * data,std::size_t bytes_transferred)
+void QAsioTcpsocket::connectToHost(const QString &hostName, quint16 port)
 {
-    bufferMutex.lock();
-    if (buffer.isOpen() && buffer.atEnd())
-        buffer.close();
-    if (!buffer.isOpen())
-        buffer.open(QBuffer::ReadWrite|QBuffer::Truncate);
-    qint64 readPos = buffer.pos();
-    buffer.seek(buffer.size());
-    Q_ASSERT(buffer.atEnd());
-    buffer.write(data, qint64(bytes_transferred));
-    buffer.seek(readPos);
-    bufferMutex.unlock();
-    QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::ReadReadly));
+    if (state() != UnconnectedState)
+        con_->connection->disconnectFromHost();
+    setState(HostFinding);
+    con_->connection->connectToHost(hostName,port);
 }
 
-bool QAsioTcpSocket::writeDataed(std::size_t bytes_transferred)
+void QAsioTcpsocket::disconnectFromHost()
 {
-    writeMutex.lock();
-    if (static_cast<std::size_t>(writeQueue.head().size()) == bytes_transferred){
-        writeQueue.dequeue();
-        if (!writeQueue.isEmpty()) {
-            wirteData(writeQueue.head().data(),static_cast<std::size_t>(writeQueue.head().size()));
-        }
-        writeMutex.unlock();
-        return true;
-    } else {
-        writeMutex.unlock();
-        return false;
-    }
+    if (state() == UnconnectedState) return;
+    con_->connection->disconnectFromHost();
 }
 
-void QAsioTcpSocket::finedHosted()
+void QAsioTcpsocket::sendData(const char * data, int size)
 {
-    QCoreApplication::postEvent(this,new QAsioEvent(QAsioEvent::HostFined));
+    if (state() == ConnectedState)
+        con_->connection->wirteData(QByteArray(data,size));
 }
 
-void QAsioTcpSocket::heartTimeOut(int timeout)
+void QAsioTcpsocket::setSocketOption(TcpAbstractSocket::SocketOption option, bool isEnble, uint value)
 {
-    QAsioEvent * e = new QAsioEvent(QAsioEvent::HeartTimeOut);
-    e->setData(timeout);
-    QCoreApplication::postEvent(this,e);
+    con_->connection->setSocketOption(option,isEnble,value);
 }
 
+std::pair<bool,int> QAsioTcpsocket::getSocketOption(TcpAbstractSocket::SocketOption opention)
+{
+    return con_->connection->getSocketOption(opention);
+}
+
+int QAsioTcpsocket::resizeClientBackThreadSize(int size)
+{
+    if (serverBuild) return -1;
+    return ioserver->setThreadSize(size);
+}

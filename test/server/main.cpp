@@ -52,5 +52,5 @@ int main(int argc, char *argv[])
     TestServer server;
     std::cout << "Begin Listen,The log >> file. The File Name is Date: yyyy-MM-dd.txt" << std::endl;
     server.listen();
-    return a.exec();;
+    return a.exec();
 }

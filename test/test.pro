@@ -4,6 +4,6 @@ CONFIG   += ordered
 SUBDIRS = \
     server \
     client \
-    HandleInThread \
-    threadServer \
-    PingTongTest
+    sslserver\
+    myserver \
+    msslserver

@@ -1,37 +1,26 @@
 QT       += core
 
 TEMPLATE = lib
-DEFINES += QASIOSOCKET_LIBRARY
-
-win32:DEFINES += _WIN32_WINNT=0x0501
-
+DEFINES += QASIOSOCKET_LIBRARY QASIO_SSL
 DESTDIR   = $$PWD/../lib
+DEFINES += _WIN32_WINNT=0x0501
 
 TARGET  = $$qtLibraryTarget(QAsioSocket)
 
 include($$PWD/../QAsioSocket.pri)
 
-win32:INCLUDEPATH += C:/local/boost_1_57_0
-win32:DEPENDPATH += C:/local/boost_1_57_0
+win32{
+    INCLUDEPATH += C:/OpenSSL-Win32/include/
+    msvc {
+        CONFIG(release, debug|release): LIBS += -LC:/OpenSSL-Win32/lib/VC/ -lssleay32M
+        else:CONFIG(debug, debug|release): LIBS += -LC:/OpenSSL-Win32/lib/VC/ -lssleay32Md
 
-win32:CONFIG(release, debug|release): LIBS += -LC:/local/boost_1_57_0/lib32-msvc-10.0/ -llibboost_date_time-vc100-mt-1_57
-else:win32:CONFIG(debug, debug|release): LIBS += -LC:/local/boost_1_57_0/lib32-msvc-10.0/ -llibboost_date_time-vc100-mt-gd-1_57
-win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += C:/local/boost_1_57_0/lib32-msvc-10.0/libboost_date_time-vc100-mt-1_57.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += C:/local/boost_1_57_0/lib32-msvc-10.0/libboost_date_time-vc100-mt-gd-1_57.lib
-
-win32:CONFIG(release, debug|release): LIBS += -LC:/local/boost_1_57_0/lib32-msvc-10.0/ -llibboost_system-vc100-mt-1_57
-else:win32:CONFIG(debug, debug|release): LIBS += -LC:/local/boost_1_57_0/lib32-msvc-10.0/ -llibboost_system-vc100-mt-gd-1_57
-win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += C:/local/boost_1_57_0/lib32-msvc-10.0/libboost_system-vc100-mt-1_57.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += C:/local/boost_1_57_0/lib32-msvc-10.0/libboost_system-vc100-mt-gd-1_57.lib
-
-win32:CONFIG(release, debug|release): LIBS += -LC:/local/boost_1_57_0/lib32-msvc-10.0/ -llibboost_thread-vc100-mt-1_57
-else:win32:CONFIG(debug, debug|release): LIBS += -LC:/local/boost_1_57_0/lib32-msvc-10.0/ -llibboost_thread-vc100-mt-gd-1_57
-win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += C:/local/boost_1_57_0/lib32-msvc-10.0/libboost_thread-vc100-mt-1_57.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += C:/local/boost_1_57_0/lib32-msvc-10.0/libboost_thread-vc100-mt-gd-1_57.lib
+        CONFIG(release, debug|release): LIBS += -LC:/OpenSSL-Win32/lib/VC/ -llibeay32M
+        else:CONFIG(debug, debug|release): LIBS += -LC:/OpenSSL-Win32/lib/VC/ -llibeay32Md
+    } else {
+        LIBS += -LC:/OpenSSL-Win32/lib/MinGW/ -leay32
+        LIBS += -LC:/OpenSSL-Win32/lib/MinGW/ -lssleay32
+    }
+}
 
 
-unix:!macx: LIBS += -lboost_thread-mt
-
-unix:!macx: LIBS += -lboost_date_time-mt
-
-unix:!macx: LIBS += -lboost_system-mt
