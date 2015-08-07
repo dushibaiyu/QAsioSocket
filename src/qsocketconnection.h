@@ -54,9 +54,9 @@ public:
                                                         shared_from_this(), std::placeholders::_1,std::placeholders::_2)));
     }
 
-    inline  void wirteData(QByteArray && data) {
+    inline  void wirteData(const char * data, int size) {
         if (is_open()) {
-            QByteArray * tdata = new QByteArray(data);
+            QByteArray * tdata = new QByteArray(data,size);
 #ifdef QASIO_SSL
             if (useSSL)
                 asio::async_write(sslSocket(),asio::buffer(tdata->data(),tdata->size()),

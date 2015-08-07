@@ -77,7 +77,7 @@ void QAsioTcpsocket::disconnectFromHost()
 void QAsioTcpsocket::sendData(const char * data, int size)
 {
     if (state() == ConnectedState)
-        con_->connection->wirteData(QByteArray(data,size));
+        con_->connection->wirteData(data,size);
 }
 
 void QAsioTcpsocket::setSocketOption(TcpAbstractSocket::SocketOption option, bool isEnble, uint value)
