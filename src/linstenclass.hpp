@@ -67,7 +67,7 @@ LinstenClass<SESSION,T>::~LinstenClass()
 template <typename SESSION,typename T>
 void LinstenClass<SESSION,T>::appectHandle(const asio::error_code & code)
 {
-    qDebug() << " ?? appectHandle : " << q;
+//    qDebug() << " ?? appectHandle : " << q;
     if (!code) {
         if (q != nullptr) {
             connection = q->haveNewAppent(connection);

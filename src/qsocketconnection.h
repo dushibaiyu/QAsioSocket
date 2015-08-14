@@ -30,7 +30,7 @@ public:
     {
         socket_.nossl = new asio::ip::tcp::socket(service);
         buffer_.resize(size);
-        qDebug() << buffer_.size();
+//        qDebug() << buffer_.size();
     }
 #ifdef QASIO_SSL
     QSocketConnection(asio::io_service & service,asio::ssl::context & ctx,size_t size) :

@@ -13,7 +13,7 @@ struct SocketSession {
     ~SocketSession();
     SocketSession() = delete;
     Session * haveNewAppent(Session * son){
-        qDebug() << "haveNewAppent(Session * son)";
+//        qDebug() << "haveNewAppent(Session * son)";
         Session * newCon = new Session(io_.getService(),size_);
         server->incomingConnection(son);
         return newCon;
