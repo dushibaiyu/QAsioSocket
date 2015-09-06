@@ -55,7 +55,7 @@ public:
         }
 #endif
         delete resolver_;
-        qDebug() << "~QSocketConnection() {";
+     //   qDebug() << "~QSocketConnection() {";
     }
 
     inline void connectToHost(const QString & hostName, quint16 port) {
