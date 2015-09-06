@@ -10,16 +10,16 @@ TARGET  = $$qtLibraryTarget(QAsioSocket)
 include($$PWD/../QAsioSocket.pri)
 
 win32{
-    INCLUDEPATH += C:/OpenSSL-Win32/include/
+    INCLUDEPATH += $$(OPENSSL)/include/
     msvc {
-        CONFIG(release, debug|release): LIBS += -LC:/OpenSSL-Win32/lib/VC/ -lssleay32M
-        else:CONFIG(debug, debug|release): LIBS += -LC:/OpenSSL-Win32/lib/VC/ -lssleay32Md
+        CONFIG(release, debug|release): LIBS += -L$$(OPENSSL)/lib/VC/ -lssleay32M
+        else:CONFIG(debug, debug|release): LIBS += -L$$(OPENSSL)/lib/VC/ -lssleay32Md
 
-        CONFIG(release, debug|release): LIBS += -LC:/OpenSSL-Win32/lib/VC/ -llibeay32M
-        else:CONFIG(debug, debug|release): LIBS += -LC:/OpenSSL-Win32/lib/VC/ -llibeay32Md
+        CONFIG(release, debug|release): LIBS += -L$$(OPENSSL)/lib/VC/ -llibeay32M
+        else:CONFIG(debug, debug|release): LIBS += -L$$(OPENSSL)/lib/VC/ -llibeay32Md
     } else {
-        LIBS += -LC:/OpenSSL-Win32/lib/MinGW/ -leay32
-        LIBS += -LC:/OpenSSL-Win32/lib/MinGW/ -lssleay32
+        LIBS += -L$$(OPENSSL)/lib/MinGW/ -leay32
+        LIBS += -L$$(OPENSSL)/lib/MinGW/ -lssleay32
     }
 }
 

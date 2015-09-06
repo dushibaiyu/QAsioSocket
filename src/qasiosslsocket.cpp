@@ -34,7 +34,7 @@ void QAsioSslSocket::disconnectFromHost()
 void QAsioSslSocket::sendData(const char * data, int size)
 {
     if (state() == ConnectedState)
-        con_->connection->wirteData(QByteArray(data,size));
+        con_->connection->wirteData(data,size);
 }
 
 void QAsioSslSocket::setSocketOption(TcpAbstractSocket::SocketOption option, bool isEnble, uint value)

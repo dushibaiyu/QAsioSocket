@@ -30,7 +30,7 @@ public:
     {
         socket_.nossl = new asio::ip::tcp::socket(service);
         buffer_.resize(size);
-//        qDebug() << buffer_.size();
+        //        qDebug() << buffer_.size();
     }
 #ifdef QASIO_SSL
     QSocketConnection(asio::io_service & service,asio::ssl::context & ctx,size_t size) :
@@ -41,9 +41,21 @@ public:
     }
 #endif
     virtual ~QSocketConnection() {
-        disconnectFromHost();
+#ifdef QASIO_SSL
+        if (useSSL) {
+            if (sslSocketLty().is_open()) {
+                sslSocketLty().close();
+            }
+        } else {
+#endif
+            if (socket().is_open()) {
+                socket().close();
+            }
+#ifdef QASIO_SSL
+        }
+#endif
         delete resolver_;
-//        qDebug() << "~QSocketConnection() {";
+        qDebug() << "~QSocketConnection() {";
     }
 
     inline void connectToHost(const QString & hostName, quint16 port) {
@@ -77,13 +89,13 @@ public:
         if (useSSL) {
             if (sslSocketLty().is_open()) {
                 sslSocket().shutdown(erro_code);
-                sslSocketLty().close();
+                //                sslSocketLty().close();
             }
         } else {
 #endif
             if (socket().is_open()) {
                 socket().shutdown(asio::ip::tcp::socket::shutdown_both,erro_code);
-                socket().close();
+                //                socket().close();
             }
 #ifdef QASIO_SSL
         }
